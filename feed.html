@@ -639,7 +639,8 @@
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
+            // Lagt till /VM26Tipp/ här före sw.js
+            navigator.serviceWorker.register('/VM26Tipp/sw.js')
                 .then(reg => console.log('Service Worker registrerad!', reg))
                 .catch(err => console.log('Service Worker fel:', err));
         });

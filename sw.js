@@ -1,9 +1,10 @@
-const CACHE_NAME = 'vm2026-v1';
+const CACHE_NAME = 'vm2026-v2'; // Ändrade till v2 så webbläsaren fattar att det är ny kod
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/feed.html',
-  '/manifest.json'
+  '/VM26Tipp/',
+  '/VM26Tipp/index.html',
+  '/VM26Tipp/feed.html',
+  '/VM26Tipp/manifest.json',
+  '/VM26Tipp/logo.png'
 ];
 
 // Installera service worker och cacha bas-filer
@@ -30,7 +31,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Nätverk i första hand (så att live-tips och bilder alltid är uppdaterade)
+// Nätverk i första hand
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     fetch(e.request).catch(() => {
