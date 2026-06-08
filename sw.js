@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vm2026-v2'; // Ändrade till v2 så webbläsaren fattar att det är ny kod
+const CACHE_NAME = 'vm2026-v3'; // Ändrat till v3 för att tvinga fram en uppdatering
 const ASSETS = [
   '/VM26Tipp/',
   '/VM26Tipp/index.html',
@@ -31,7 +31,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Nätverk i första hand
+// Nätverk i första hand (Network-first)
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     fetch(e.request).catch(() => {
