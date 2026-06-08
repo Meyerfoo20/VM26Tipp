@@ -559,18 +559,55 @@
     });
 
     // Hantera bildval
-    document.getElementById('image-file').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.size > 800000) { alert("Välj en bild under 800KB."); this.value = ""; return; }
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            selectedBase64Image = event.target.result;
-            const labelElement = document.getElementById('file-label-text');
+    // Hantera bildval med automatisk komprimering för stora bilder
+document.getElementById('image-file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const labelElement = document.getElementById('file-label-text');
+    labelElement.innerHTML = `<span style="font-size:2rem;">⏳</span><span style="color:#fff;font-weight:700;">Optimerar bilden...</span>`;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            // Skapa en HTML5 Canvas för att rita och komprimera bilden
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            // Sätt en maximal bredd/höjd (t.ex. 1200 pixlar räcker gott och väl för ett mobilflöde)
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            // Rita bilden på canvasen med de nya dimensionerna
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Konvertera till Base64 JPEG med 70% kvalitet (sparar enormt mycket utrymme)
+            selectedBase64Image = canvas.toDataURL('image/jpeg', 0.7);
+            
             labelElement.innerHTML = `<span style="font-size:2rem;">✨</span><span style="color:#fff;font-weight:700;">Bilden är klar!</span>`;
         };
-        reader.readAsDataURL(file);
-    });
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+});
 
     // Ladda upp bild
     document.getElementById('upload-btn').addEventListener('click', async () => {
