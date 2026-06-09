@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VM 2026</title>
+    <title>VM 2026 - Bildflöde</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -60,7 +60,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             padding-bottom: 24px;
             border-bottom: 1px solid rgba(255,255,255,0.08);
             position: relative;
@@ -135,10 +135,80 @@
             text-overflow: ellipsis;
         }
 
-        .header-profile-meta {
-            font-size: 0.68rem;
+        /* --- ANVÄNDARPROFILER KARUSELL --- */
+        .users-carousel-container {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .users-carousel-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
             color: var(--text-muted);
+            letter-spacing: 0.5px;
+            padding-left: 5px;
+        }
+
+        .users-carousel {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 5px 5px 12px 5px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .users-carousel::-webkit-scrollbar {
+            height: 5px;
+        }
+        .users-carousel::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+        }
+        .users-carousel::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+        .users-carousel::-webkit-scrollbar-thumb:hover {
+            background: var(--border);
+        }
+
+        .user-carousel-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            min-width: 65px;
+        }
+
+        .user-carousel-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .user-carousel-item .user-avatar {
+            border: 2px solid var(--border);
+            transition: border-color 0.2s;
+        }
+
+        .user-carousel-item:hover .user-avatar {
+            border-color: var(--amber);
+            box-shadow: 0 0 12px var(--amber-glow);
+        }
+
+        .user-carousel-name {
+            font-size: 0.75rem;
             font-weight: 600;
+            color: #cbd5e1;
+            max-width: 65px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
         }
 
         /* --- PREMIUM KNAPPAR --- */
@@ -207,7 +277,7 @@
             margin-bottom: 20px;
         }
 
-        input[type="text"] {
+        input[type="text"], textarea {
             width: 100%;
             background: rgba(7, 11, 22, 0.75);
             border: 1px solid var(--border);
@@ -219,10 +289,15 @@
             transition: all 0.25s ease;
         }
         
-        input[type="text"]:focus {
+        input[type="text"]:focus, textarea:focus {
             outline: none;
             border-color: var(--accent-green);
             background: rgba(4, 8, 20, 0.95);
+        }
+
+        textarea {
+            resize: none;
+            height: 75px;
         }
 
         input[type="file"] {
@@ -312,7 +387,7 @@
             text-transform: uppercase;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
-            overflow: hidden; /* För runda uppladdade bilder */
+            overflow: hidden;
         }
 
         .user-avatar img {
@@ -613,7 +688,7 @@
             transform: translateY(-1px);
         }
 
-        /* --- PROFIL MODAL (POPUP BILDGALLERI) --- */
+        /* --- PROFIL MODAL (POPUP BILDGALLERI + BIO + MEDALJER) --- */
         .profile-modal {
             position: fixed;
             top: 0;
@@ -669,21 +744,46 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            margin-bottom: 25px;
-            gap: 12px;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .modal-avatar-container {
+            position: relative;
+            cursor: pointer;
+        }
+        .modal-avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .modal-avatar-container:hover .modal-avatar-overlay {
+            opacity: 1;
         }
 
         .modal-avatar {
-            width: 70px;
-            height: 70px;
-            font-size: 1.6rem;
+            width: 76px;
+            height: 76px;
+            font-size: 1.8rem;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
             color: #fff;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.15);
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
             overflow: hidden;
         }
@@ -698,16 +798,55 @@
             font-size: 1.4rem;
             font-weight: 900;
             color: #fff;
+            letter-spacing: -0.3px;
         }
 
+        .modal-user-bio {
+            font-size: 0.92rem;
+            color: #cbd5e1;
+            max-width: 320px;
+            line-height: 1.4;
+            font-style: italic;
+            margin: 2px 0 6px 0;
+        }
+
+        /* --- STYLING FÖR MEDALJER (BADGES) --- */
+        .modal-badges-container {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .badge-pill.active-photography { border-color: #3b82f6; background: rgba(59, 130, 246, 0.1); color: #60a5fa; }
+        .badge-pill.active-social { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); color: #c084fc; }
+        .badge-pill.active-hype { border-color: #f97316; background: rgba(249, 115, 22, 0.1); color: #ffedd5; text-shadow: 0 0 5px rgba(249,115,22,0.4); }
+
+        .modal-stats-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
         .modal-stats {
             background: rgba(0,0,0,0.2);
-            padding: 8px 20px;
-            border-radius: 15px;
-            font-size: 0.85rem;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 0.8rem;
             color: var(--text-muted);
             border: 1px solid rgba(255,255,255,0.03);
-            margin-bottom: 5px;
         }
         .modal-stats strong {
             color: var(--amber);
@@ -755,24 +894,42 @@
             text-overflow: ellipsis;
         }
 
-        /* --- NYTT: STYLING FÖR EDIT PROFILBILD-KNAPP --- */
-        .btn-edit-avatar {
-            background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.3);
+        .btn-edit-profile {
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.25);
             color: var(--amber);
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             font-weight: 700;
-            padding: 6px 14px;
+            padding: 6px 16px;
             border-radius: 20px;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 6px;
         }
-        .btn-edit-avatar:hover {
+        .btn-edit-profile:hover {
             background: var(--amber);
             color: #000;
+        }
+
+        /* --- REDIGERA PROFIL FORMULÄR --- */
+        .edit-profile-fields {
+            background: rgba(4, 8, 20, 0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 10px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+            width: 100%;
+        }
+        .edit-profile-fields label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -793,7 +950,12 @@
             <div id="my-profile-header-block" style="display: none;"></div>
         </header>
 
-        <!-- Sektion för att ladda upp -->
+        <!-- ANVÄNDARPROFILER KARUSELL (HÄR VISAS EXAKT ALLA ANVÄNDARE NU!) -->
+        <div class="users-carousel-container" id="users-carousel-section" style="display: none;">
+            <div class="users-carousel-title">Gemenskapen 🏆</div>
+            <div class="users-carousel" id="users-carousel-list"></div>
+        </div>
+
         <div class="upload-card" id="upload-section" style="display:none;">
             <h2>Dela ett ögonblick från mästerskapet</h2>
             <div class="form-group">
@@ -816,7 +978,6 @@
             Logga in på huvudsidan för att gå med i gemenskapen och dela dina egna VM-bilder.
         </div>
 
-        <!-- Flödet där bilderna hamnar -->
         <div class="feed" id="feed-container">
             <div class="loading-container">
                 <div class="loading-spinner"></div>
@@ -825,24 +986,30 @@
         </div>
     </div>
 
-    <!-- POPUP PROFIL-MODAL -->
     <div class="profile-modal" id="profileModal">
         <div class="profile-modal-content">
             <button class="close-modal" id="closeModalBtn">&times;</button>
+            
             <div class="modal-profile-header" id="modalProfileHeader"></div>
             
-            <!-- GÖMD INPUT FÖR ATT LADDA UPP PROFILBILD -->
+            <div class="edit-profile-fields" id="editProfileSection">
+                <div>
+                    <label>Min Personliga Bio / Status</label>
+                    <textarea id="edit-bio-input" placeholder="Skriv din VM-status... Var kollar du matcherna? Vilka hejar du på?"></textarea>
+                </div>
+                <button class="btn btn-primary" style="padding: 10px; font-size:0.85rem; justify-content:center;" id="save-profile-fields-btn">Spara ändringar ✔</button>
+            </div>
+            
             <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;">
 
-            <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">Uppladdade bilder</h3>
+            <h3 style="font-size: 0.95rem; margin-top: 20px; margin-bottom: 12px; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">Uppladdade bilder</h3>
             <div class="profile-gallery" id="profileGallery"></div>
         </div>
     </div>
 
-    <!-- 📱 BOTTOM NAVBAR -->
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Tippa & Meny
         </a>
         <a href="feed.html" class="nav-item active">
@@ -854,7 +1021,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, setDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, setDoc, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
         const firebaseConfig = {
             apiKey: "AIzaSyB9r1e68Vte3S4Ui8OiuBoSdR8p8uigeSc",
@@ -873,7 +1040,7 @@
         let currentUser = null;
         let selectedBase64Image = null;
         let allCachedPhotos = []; 
-        let allCachedProfiles = {}; // Sparar uid -> base64Avatar för alla användare på sidan
+        let allCachedProfiles = {}; // Sparar uid -> { avatar, bio, username }
 
         function getAvatarGradient(name) {
             const colors = [['#3b82f6', '#1d4ed8'], ['#10b981', '#047857'], ['#f59e0b', '#b45309'], ['#ec4899', '#be185d'], ['#8b5cf6', '#6d28d9'], ['#ef4444', '#b91c1c']];
@@ -889,10 +1056,10 @@
             return name;
         }
 
-        // Returnerar HTML för en avatar (antingen sparad bild eller initialer)
         function renderAvatarHtml(userId, username, customSizeStyle = "") {
             const cleanedName = cleanUsername(username);
-            const savedAvatar = allCachedProfiles[userId];
+            const profileData = allCachedProfiles[userId];
+            const savedAvatar = profileData ? profileData.avatar : null;
             
             if (savedAvatar) {
                 return `<div class="user-avatar" style="${customSizeStyle}"><img src="${savedAvatar}" alt=""></div>`;
@@ -941,6 +1108,7 @@
     
                 await updateDoc(postRef, {
                     comments: arrayUnion({
+                        userId: currentUser.uid,
                         username: displayName,
                         text: commentText,
                         createdAt: new Date().toISOString()
@@ -961,39 +1129,100 @@
             } catch (error) { alert("Kunde inte radera inlägget: " + error.message); }
         };
 
-        // ÖPPNA PROFIL-MODAL
+        function calculateUserBadges(targetUserId) {
+            let badges = [];
+            
+            const postCount = allCachedPhotos.filter(p => p.userId === targetUserId).length;
+            if(postCount >= 3) {
+                badges.push({ icon: "📸", title: "Fotografen", class: "active-photography", desc: "Har delat 3+ ögonblick i flödet" });
+            }
+
+            let commentCount = 0;
+            allCachedPhotos.forEach(p => {
+                if(p.comments) {
+                    p.comments.forEach(c => { if(c.userId === targetUserId) commentCount++; });
+                }
+            });
+            if(commentCount >= 5) {
+                badges.push({ icon: "💬", title: "Kommentatorn", class: "active-social", desc: "Skrivit 5+ kommentarer i flödet" });
+            }
+
+            let reactionCount = 0;
+            allCachedPhotos.forEach(p => {
+                if(p.reactedUsers) {
+                    Object.values(p.reactedUsers).forEach(arr => {
+                        if(Array.isArray(arr) && arr.includes(targetUserId)) reactionCount++;
+                    });
+                }
+            });
+            if(reactionCount >= 5) {
+                badges.push({ icon: "🔥", title: "EmojiKing", class: "active-hype", desc: "Reagerat på andras bilder 5+ gånger" });
+            }
+
+            return badges;
+        }
+
         window.openUserProfile = function(targetUserId, targetUsername) {
+            if(!targetUserId || targetUserId === '') { return; }
+            document.getElementById('editProfileSection').style.display = 'none'; 
+            
             const modal = document.getElementById('profileModal');
             const headerBlock = document.getElementById('modalProfileHeader');
             const gallery = document.getElementById('profileGallery');
             
             const cleanedName = cleanUsername(targetUsername);
+            const userPhotos = allCachedPhotos.filter(p => p.userId === targetUserId);
 
-            const userPhotos = allCachedPhotos.filter(p => 
-                (p.userId && p.userId === targetUserId) || 
-                (!p.userId && p.username === targetUsername)
-            );
+            const profileData = allCachedProfiles[targetUserId];
+            const userBio = profileData && profileData.bio ? profileData.bio : "Ingen VM-status angiven ännu.";
 
-            // Kolla om det är den inloggade användarens egna profil
+            const badges = calculateUserBadges(targetUserId);
+            let badgesHtml = "";
+            if(badges.length > 0) {
+                badges.forEach(b => {
+                    badgesHtml += `<div class="badge-pill ${b.class}" title="${b.desc}">${b.icon} ${b.title}</div>`;
+                });
+            } else {
+                badgesHtml = `<div style="font-size:0.75rem; color:var(--text-muted);">Inga medaljer intjänade ännu 🏅</div>`;
+            }
+
             const isMe = currentUser && targetUserId === currentUser.uid;
+            
             const editButtonHtml = isMe ? `
-                <button class="btn-edit-avatar" onclick="document.getElementById('avatar-upload-input').click()">
-                    📸 Ändra profilbild
+                <button class="btn-edit-profile" onclick="toggleEditProfileView()">
+                    ⚙️ Inställningar & Bio
                 </button>
             ` : '';
 
-            // Generera profilens avatar via vår nya funktion
-            const avatarHtml = renderAvatarHtml(targetUserId, targetUsername, "width:70px; height:70px; font-size:1.6rem; border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 8px 20px rgba(0,0,0,0.4);");
+            const avatarHtml = renderAvatarHtml(targetUserId, targetUsername, "width:76px; height:76px; font-size:1.8rem;");
 
             headerBlock.innerHTML = `
-                ${avatarHtml}
+                <div class="modal-avatar-container" ${isMe ? 'onclick="document.getElementById(\'avatar-upload-input\').click()"' : ''}>
+                    ${avatarHtml}
+                    ${isMe ? '<div class="modal-avatar-overlay">Byt bild</div>' : ''}
+                </div>
                 <div class="modal-username">${cleanedName}</div>
-                <div class="modal-stats">Mästerskapsbidrag: <strong>${userPhotos.length} st</strong></div>
+                <div class="modal-user-bio" id="modal-bio-text">"${userBio}"</div>
+                
+                <div class="modal-badges-container">
+                    ${badgesHtml}
+                </div>
+
+                <div class="modal-stats-row">
+                    <div class="modal-stats">Bilder: <strong>${userPhotos.length}</strong></div>
+                    <div class="modal-stats">Medaljer: <strong>${badges.length}</strong></div>
+                </div>
                 ${editButtonHtml}
             `;
 
+            if(isMe && profileData && profileData.bio) {
+                document.getElementById('edit-bio-input').value = profileData.bio;
+            } else if (isMe) {
+                document.getElementById('edit-bio-input').value = "";
+            }
+
             if(userPhotos.length === 0) {
-                gallery.innerHTML = '<div style="grid-column: span 2; text-align:center; color: var(--text-muted); padding: 20px; font-size:0.9rem;">Inga bilder uppladdade än.</div>';
+                gallery.innerHTML = '<div style="grid-column: span 2; text-align:center; color: var(--text-muted); padding: 30px; font-size:0.9rem; font-style:italic;">Inga bilder uppladdade än.</div>';
             } else {
                 let galleryHtml = "";
                 userPhotos.forEach(p => {
@@ -1010,7 +1239,46 @@
             modal.style.display = "flex";
         };
 
-        // HANTERA UPPLADDNING AV PROFILBILD (KOMPRIMERING + SPARA I FIRESTORE)
+        window.toggleEditProfileView = function() {
+            const section = document.getElementById('editProfileSection');
+            if(section.style.display === 'flex' || section.style.display === 'block') {
+                section.style.display = 'none';
+            } else {
+                section.style.display = 'flex';
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        document.getElementById('save-profile-fields-btn').addEventListener('click', async () => {
+            if(!currentUser) return;
+            const newBio = document.getElementById('edit-bio-input').value.trim();
+            const currentUsername = currentUser.displayName || currentUser.email;
+            
+            try {
+                const profileRef = doc(db, "profiles", currentUser.uid);
+                const profileSnap = await getDoc(profileRef);
+                let currentAvatar = profileSnap.exists() ? (profileSnap.data().avatar || null) : null;
+
+                await setDoc(profileRef, {
+                    avatar: currentAvatar,
+                    bio: newBio,
+                    username: currentUsername,
+                    updatedAt: new Date().toISOString()
+                });
+
+                if(!allCachedProfiles[currentUser.uid]) allCachedProfiles[currentUser.uid] = {};
+                allCachedProfiles[currentUser.uid].bio = newBio;
+                allCachedProfiles[currentUser.uid].username = currentUsername;
+
+                document.getElementById('modal-bio-text').innerText = newBio ? `"${newBio}"` : '"Ingen VM-status angiven ännu."';
+                document.getElementById('editProfileSection').style.display = 'none';
+                alert("Din profil har uppdaterats framgångsrikt! ✨");
+                loadPhotoFeed();
+            } catch (error) {
+                alert("Gick inte att spara ändringar: " + error.message);
+            }
+        });
+
         document.getElementById('avatar-upload-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file || !currentUser) return;
@@ -1020,29 +1288,35 @@
                 const img = new Image();
                 img.onload = async function() {
                     const canvas = document.createElement('canvas');
-                    // Smidig profilbildsstorlek (250x250 kvadratisk)
                     const SIZE = 250;
                     canvas.width = SIZE;
                     canvas.height = SIZE;
                     
                     const ctx = canvas.getContext('2d');
-                    // Klipp ut bilden i mitten ifall den inte är kvadratisk
                     const minEdge = Math.min(img.width, img.height);
                     const sx = (img.width - minEdge) / 2;
                     const sy = (img.height - minEdge) / 2;
                     
                     ctx.drawImage(img, sx, sy, minEdge, minEdge, 0, 0, SIZE, SIZE);
                     const base64Avatar = canvas.toDataURL('image/jpeg', 0.85);
+                    const currentUsername = currentUser.displayName || currentUser.email;
 
                     try {
-                        // Spara profilbilden unikt kopplat till användarens UID
-                        await setDoc(doc(db, "profiles", currentUser.uid), {
+                        const profileRef = doc(db, "profiles", currentUser.uid);
+                        const profileSnap = await getDoc(profileRef);
+                        let currentBio = profileSnap.exists() ? (profileSnap.data().bio || "") : "";
+
+                        await setDoc(profileRef, {
                             avatar: base64Avatar,
+                            bio: currentBio,
+                            username: currentUsername,
                             updatedAt: new Date().toISOString()
                         });
                         
-                        // Uppdatera cachen omedelbart och ladda om vyn
-                        allCachedProfiles[currentUser.uid] = base64Avatar;
+                        if(!allCachedProfiles[currentUser.uid]) allCachedProfiles[currentUser.uid] = {};
+                        allCachedProfiles[currentUser.uid].avatar = base64Avatar;
+                        allCachedProfiles[currentUser.uid].username = currentUsername;
+
                         document.getElementById('profileModal').style.display = 'none';
                         loadPhotoFeed();
                     } catch (error) {
@@ -1053,6 +1327,56 @@
             };
             reader.readAsDataURL(file);
         });
+
+        // MODIFIERAD: Samlar nu in ALLA konton från profiles (oavsett om de lagt upp bilder eller inte)
+        function renderUsersCarousel() {
+            const carouselSection = document.getElementById('users-carousel-section');
+            const carouselList = document.getElementById('users-carousel-list');
+            
+            const uniqueUsersMap = new Map();
+
+            // 1. Lägg först till exakt ALLA som har ett profildokument i databasen
+            for (const [uid, prof] of Object.entries(allCachedProfiles)) {
+                uniqueUsersMap.set(uid, prof.username || "VM-Tippare");
+            }
+
+            // 2. Lägg till folk från flödet (om någon råkar sakna profildokument i 'profiles')
+            allCachedPhotos.forEach(post => {
+                if (post.userId) {
+                    if (!uniqueUsersMap.has(post.userId) || uniqueUsersMap.get(post.userId) === "VM-Tippare") {
+                        uniqueUsersMap.set(post.userId, post.username);
+                    }
+                }
+            });
+
+            // 3. Lägg till dig själv (så du alltid kan se dig själv i kön)
+            if (currentUser) {
+                uniqueUsersMap.set(currentUser.uid, currentUser.displayName || currentUser.email);
+            }
+
+            if (uniqueUsersMap.size === 0) {
+                carouselSection.style.display = "none";
+                return;
+            }
+
+            let carouselHtml = "";
+            
+            // 4. Bygg upp HTML
+            uniqueUsersMap.forEach((username, uid) => {
+                const shortName = cleanUsername(username);
+                const avatarMarkup = renderAvatarHtml(uid, username, "width:50px; height:50px; font-size:1.1rem;");
+                
+                carouselHtml += `
+                    <div class="user-carousel-item" onclick="openUserProfile('${uid}', '${username}')">
+                        ${avatarMarkup}
+                        <div class="user-carousel-name">${shortName}</div>
+                    </div>
+                `;
+            });
+
+            carouselList.innerHTML = carouselHtml;
+            carouselSection.style.display = "block";
+        }
 
         document.getElementById('closeModalBtn').addEventListener('click', () => {
             document.getElementById('profileModal').style.display = 'none';
@@ -1143,48 +1467,51 @@
         async function loadPhotoFeed() {
             const feedContainer = document.getElementById('feed-container');
             try {
-                // 1. Hämta alla uppladdade profilbilder först för snabb cache-matchning
+                // 1. Hämta alla existerande anpassade profiler först
                 const profilesSnapshot = await getDocs(collection(db, "profiles"));
                 allCachedProfiles = {};
                 profilesSnapshot.forEach(docSnap => {
-                    allCachedProfiles[docSnap.id] = docSnap.data().avatar;
+                    const data = docSnap.data();
+                    allCachedProfiles[docSnap.id] = {
+                        avatar: data.avatar || null,
+                        bio: data.bio || "",
+                        username: data.username || data.displayName || data.email || null
+                    };
                 });
 
                 // 2. Hämta bildflödet
                 const q = query(collection(db, "photos"), orderBy("createdAt", "desc"));
                 const querySnapshot = await getDocs(q);
                 
-                if (querySnapshot.empty) { 
-                    feedContainer.innerHTML = '<div class="no-posts">Inga bilder ännu.</div>'; 
-                    document.getElementById('my-profile-header-block').style.display = 'none';
-                    return; 
-                }
-                
                 allCachedPhotos = [];
                 querySnapshot.forEach(docSnap => {
                     allCachedPhotos.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                // 3. Rita ut min profil i headern
+                // 3. Kör karusellbygget baserat på alla användare
+                renderUsersCarousel();
+                
+                // 4. Rita ut min profil i headern om jag är inloggad
                 if(currentUser) {
                     const myRawName = currentUser.displayName || currentUser.email;
-                    const myCleanName = cleanUsername(myRawName);
                     
-                    const myCount = allCachedPhotos.filter(p => p.userId === currentUser.uid || p.username === myRawName).length;
                     const headerProfileBlock = document.getElementById('my-profile-header-block');
                     headerProfileBlock.className = "header-profile";
                     headerProfileBlock.style.display = "flex";
                     headerProfileBlock.setAttribute("onclick", `openUserProfile('${currentUser.uid}', '${myRawName}')`);
                     
-                    // Renderar dynamiskt sparad profilbild eller gradient
                     const headerAvatarHtml = renderAvatarHtml(currentUser.uid, myRawName, "width:28px; height:28px; font-size:0.75rem;");
                     headerProfileBlock.innerHTML = `
                         ${headerAvatarHtml}
                         <div class="header-profile-info">
                             <span class="header-profile-name">Min Profil</span>
-                            <span class="header-profile-meta">${myCount} bilder</span>
                         </div>
                     `;
+                }
+
+                if (querySnapshot.empty) { 
+                    feedContainer.innerHTML = '<div class="no-posts">Inga bilder ännu.</div>'; 
+                    return; 
                 }
                 
                 let html = "";
@@ -1192,7 +1519,6 @@
     
                 allCachedPhotos.forEach((data) => {
                     const postId = data.id;
-                    
                     let dateStr = "";
                     if(data.createdAt) { 
                         const d = new Date(data.createdAt); 
@@ -1200,7 +1526,6 @@
                     }
                     
                     const displayName = cleanUsername(data.username);
-                    
                     const respondedUsers = data.reactedUsers || {};
                     const hearts = respondedUsers.heart || [];
                     const fires = respondedUsers.fire || [];
@@ -1224,13 +1549,12 @@
                     comments.forEach(c => {
                         commentsHtml += `
                             <div class="comment-item">
-                                <span class="comment-user">${c.username}:</span>
+                                <span class="comment-user" onclick="openUserProfile('${c.userId || ''}', '${c.username}')" style="cursor:pointer;">${c.username}:</span>
                                 <span class="comment-text">${c.text}</span>
                             </div>
                         `;
                     });
 
-                    // Generera inläggets avatar
                     const postAvatarHtml = renderAvatarHtml(data.userId || '', data.username || '');
     
                     html += `
@@ -1278,7 +1602,7 @@
                 feedContainer.innerHTML = html;
             } catch (error) { 
                 console.error(error);
-                feedContainer.innerHTML = '<div class="no-posts">Kunde inte hämta flödet. Kontrollera Firestore-regler.</div>'; 
+                feedContainer.innerHTML = '<div class="no-posts">Kunde inte hämta flödet.</div>'; 
             }
         }
     </script>
