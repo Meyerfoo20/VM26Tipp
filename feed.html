@@ -535,225 +535,234 @@
         </a>
     </nav>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyB9r1e68Vte3S4Ui8OiuBoSdR8p8uigeSc",
-        authDomain: "vm26-a4196.firebaseapp.com",
-        projectId: "vm26-a4196",
-        storageBucket: "vm26-a4196.firebasestorage.app",
-        messagingSenderId: "257795289744",
-        appId: "1:257795289744:web:fad78ea5dfe7faeba1de15",
-        measurementId: "G-S9KVSPW0D1"
-    };
-
-    // Initiera Firebase korrekt
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let selectedBase64Image = null;
-
-    // Slumpmässig gradient för profilbilden
-    function getAvatarGradient(name) {
-        const colors = [['#3b82f6', '#1d4ed8'], ['#10b981', '#047857'], ['#f59e0b', '#b45309'], ['#ec4899', '#be185d'], ['#8b5cf6', '#6d28d9'], ['#ef4444', '#b91c1c']];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
-        const index = Math.abs(hash % colors.length);
-        return `linear-gradient(135deg, ${colors[index][0]} 0%, ${colors[index][1]} 100%)`;
-    }
-
-    // Spara-funktion för kamerarullen
-    window.saveToCameraRoll = function(base64Data, filename) {
-        try {
-            const link = document.createElement('a');
-            link.href = base64Data;
-            link.download = filename || 'vm-bild-2026.jpg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (err) {
-            alert("Långtryck på bilden för att spara den i din kamerarull.");
-        }
-    };
-
-    // Funktion för att hantera emojiklick och uppdatera Firestore
-    window.reactToPost = async function(postId, emojiType) {
-        try {
-            const postRef = doc(db, "photos", postId);
-            
-            // Öka räknaren för just denna emoji med 1 i Firestore
-            await updateDoc(postRef, {
-                [`reactions.${emojiType}`]: increment(1)
-            });
-            
-            // Ladda om flödet för att visa det nya antalet
-            loadPhotoFeed();
-        } catch (error) {
-            console.error("Kunde inte registrera reaktion:", error);
-        }
-    };
-
-    // Lyssna på inloggningsstatus
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('upload-section').style.display = 'block';
-            document.getElementById('auth-alert').style.display = 'none';
-        } else {
-            currentUser = null;
-            document.getElementById('upload-section').style.display = 'none';
-            document.getElementById('auth-alert').style.display = 'block';
-        }
-        loadPhotoFeed();
-    });
-
-    // Hantera bildval
-    // Hantera bildval med automatisk komprimering för stora bilder
-document.getElementById('image-file').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const labelElement = document.getElementById('file-label-text');
-    labelElement.innerHTML = `<span style="font-size:2rem;">⏳</span><span style="color:#fff;font-weight:700;">Optimerar bilden...</span>`;
-
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-            // Skapa en HTML5 Canvas för att rita och komprimera bilden
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-
-            // Sätt en maximal bredd/höjd (t.ex. 1200 pixlar räcker gott och väl för ett mobilflöde)
-            const MAX_WIDTH = 1200;
-            const MAX_HEIGHT = 1200;
-
-            if (width > height) {
-                if (width > MAX_WIDTH) {
-                    height *= MAX_WIDTH / width;
-                    width = MAX_WIDTH;
-                }
-            } else {
-                if (height > MAX_HEIGHT) {
-                    width *= MAX_HEIGHT / height;
-                    height = MAX_HEIGHT;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-
-            // Rita bilden på canvasen med de nya dimensionerna
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-
-            // Konvertera till Base64 JPEG med 70% kvalitet (sparar enormt mycket utrymme)
-            selectedBase64Image = canvas.toDataURL('image/jpeg', 0.7);
-            
-            labelElement.innerHTML = `<span style="font-size:2rem;">✨</span><span style="color:#fff;font-weight:700;">Bilden är klar!</span>`;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    
+        const firebaseConfig = {
+            apiKey: "AIzaSyB9r1e68Vte3S4Ui8OiuBoSdR8p8uigeSc",
+            authDomain: "vm26-a4196.firebaseapp.com",
+            projectId: "vm26-a4196",
+            storageBucket: "vm26-a4196.firebasestorage.app",
+            messagingSenderId: "257795289744",
+            appId: "1:257795289744:web:fad78ea5dfe7faeba1de15",
+            measurementId: "G-S9KVSPW0D1"
         };
-        img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-});
-
-    // Ladda upp bild
-    document.getElementById('upload-btn').addEventListener('click', async () => {
-        if (!currentUser || !selectedBase64Image) return;
-        const caption = document.getElementById('image-caption').value.trim();
-        const uploadBtn = document.getElementById('upload-btn');
-        uploadBtn.disabled = true;
-        try {
-            await addDoc(collection(db, "photos"), {
-                username: currentUser.displayName || currentUser.email,
-                image: selectedBase64Image,
-                caption: caption,
-                createdAt: new Date().toISOString()
-            });
-            document.getElementById('image-caption').value = "";
-            // Återställ filväljaren
-            document.getElementById('image-file').value = "";
-            document.getElementById('file-label-text').innerHTML = `
-                <span style="font-size: 2.2rem;">🖼️</span>
-                <span style="font-size: 1.05rem; color: #fff;">Välj eller ta en bild</span>
-                <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400;">Format: JPG, PNG (Max 800KB)</span>
-            `;
-            selectedBase64Image = null;
-            loadPhotoFeed();
-        } catch (error) { alert(error.message); } finally { uploadBtn.disabled = false; }
-    });
-
-    // Hämta flödet
-    // Hämta flödet med emojireaktioner
-async function loadPhotoFeed() {
-    const feedContainer = document.getElementById('feed-container');
-    try {
-        const q = query(collection(db, "photos"), orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) { feedContainer.innerHTML = '<div class="no-posts">Inga bilder ännu.</div>'; return; }
-        let html = "";
-        
-        querySnapshot.forEach((documentSnapshot) => {
-            const data = documentSnapshot.data();
-            const postId = documentSnapshot.id; // Hämta dokumentets ID från Firestore
-            
-            let dateStr = "";
-            if(data.createdAt) { 
-                const d = new Date(data.createdAt); 
-                dateStr = d.toLocaleDateString('sv-SE') + " " + d.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}); 
+    
+        // Initiera Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+    
+        let currentUser = null;
+        let selectedBase64Image = null;
+    
+        // Slumpmässig gradient för profilbilden
+        function getAvatarGradient(name) {
+            const colors = [['#3b82f6', '#1d4ed8'], ['#10b981', '#047857'], ['#f59e0b', '#b45309'], ['#ec4899', '#be185d'], ['#8b5cf6', '#6d28d9'], ['#ef4444', '#b91c1c']];
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) { hash = name.charCodeAt(i) + ((hash << 5) - hash); }
+            const index = Math.abs(hash % colors.length);
+            return `linear-gradient(135deg, ${colors[index][0]} 0%, ${colors[index][1]} 100%)`;
+        }
+    
+        // Spara-funktion för kamerarullen
+        window.saveToCameraRoll = function(base64Data, filename) {
+            try {
+                const link = document.createElement('a');
+                link.href = base64Data;
+                link.download = filename || 'vm-bild-2026.jpg';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } catch (err) {
+                alert("Långtryck på bilden för att spara den i din kamerarull.");
             }
-            
-            let displayName = data.username || "Tippare";
-            if(displayName.includes('@')) displayName = displayName.split('@')[0];
-            const gradient = getAvatarGradient(displayName);
-            
-            // Hämta sparade reaktioner eller sätt till 0 om de inte finns ännu
-            const reactions = data.reactions || {};
-            const heartCount = reactions.heart || 0;
-            const laughCount = reactions.laugh || 0;
-            const wowCount = reactions.wow || 0;
-            const fireCount = reactions.fire || 0;
-
-            html += `
-                <div class="post-card">
-                    <div class="post-header">
-                        <div class="post-user-info">
-                            <div class="user-avatar" style="background:${gradient}">${displayName.substring(0,2)}</div>
-                            <span class="post-user">${displayName}</span>
-                        </div>
-                        <span class="post-time">${dateStr}</span>
-                    </div>
-                    <div class="post-img-container"><img class="post-img" src="${data.image}"></div>
-                    <div class="post-footer">
-                        ${data.caption ? `<div class="post-caption"><strong>${displayName}</strong> ${data.caption}</div>` : ''}
-                        
-                        <div class="reaction-container">
-                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'heart')">❤️ <span>${heartCount}</span></button>
-                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'laugh')">😂 <span>${laughCount}</span></button>
-                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'aubergine')">🍆 <span>${aubergineCount}</span></button>
-                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'fire')">🔥 <span>${fireCount}</span></button>
-                        </div>
-
-                        <button class="btn-save" style="margin-top: 10px;" onclick="saveToCameraRoll('${data.image}', 'vm2026.jpg')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            Spara till enhet
-                        </button>
-                    </div>
-                </div>`;
+        };
+    
+        // Smart funktion för unika reaktioner per användare
+        window.reactToPost = async function(postId, emojiType, hasReacted) {
+            if (!currentUser) {
+                alert("Du måste vara inloggad för att reagera på bilder.");
+                return;
+            }
+    
+            try {
+                const postRef = doc(db, "photos", postId);
+                const userIdentifier = currentUser.uid;
+    
+                if (hasReacted) {
+                    // Ta bort användaren om de redan reagerat
+                    await updateDoc(postRef, {
+                        [`reactedUsers.${emojiType}`]: arrayRemove(userIdentifier)
+                    });
+                } else {
+                    // Lägg till användaren om de inte reagerat tidigare
+                    await updateDoc(postRef, {
+                        [`reactedUsers.${emojiType}`]: arrayUnion(userIdentifier)
+                    });
+                }
+                
+                // Ladda om flödet direkt
+                loadPhotoFeed();
+            } catch (error) {
+                console.error("Kunde inte registrera reaktion:", error);
+            }
+        };
+    
+        // Lyssna på inloggningsstatus
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('upload-section').style.display = 'block';
+                document.getElementById('auth-alert').style.display = 'none';
+            } else {
+                currentUser = null;
+                document.getElementById('upload-section').style.display = 'none';
+                document.getElementById('auth-alert').style.display = 'block';
+            }
+            loadPhotoFeed();
         });
-        feedContainer.innerHTML = html;
-    } catch (error) { 
-        console.error(error);
-        feedContainer.innerHTML = '<div class="no-posts">Kunde inte hämta flödet. Kontrollera Firestore-regler.</div>'; 
-    }
-}
-</script>
+    
+        // Hantera bildval med automatisk komprimering (löser gränsen på 800KB)
+        document.getElementById('image-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+    
+            const labelElement = document.getElementById('file-label-text');
+            labelElement.innerHTML = `<span style="font-size:2rem;">⏳</span><span style="color:#fff;font-weight:700;">Optimerar bilden...</span>`;
+    
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+    
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1200;
+    
+                    if (width > height) {
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    } else {
+                        if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                    }
+    
+                    canvas.width = width;
+                    canvas.height = height;
+    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+    
+                    selectedBase64Image = canvas.toDataURL('image/jpeg', 0.7);
+                    labelElement.innerHTML = `<span style="font-size:2rem;">✨</span><span style="color:#fff;font-weight:700;">Bilden är klar!</span>`;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    
+        // Ladda upp bild till Firestore
+        document.getElementById('upload-btn').addEventListener('click', async () => {
+            if (!currentUser || !selectedBase64Image) return;
+            const caption = document.getElementById('image-caption').value.trim();
+            const uploadBtn = document.getElementById('upload-btn');
+            uploadBtn.disabled = true;
+            try {
+                await addDoc(collection(db, "photos"), {
+                    username: currentUser.displayName || currentUser.email,
+                    image: selectedBase64Image,
+                    caption: caption,
+                    createdAt: new Date().toISOString(),
+                    // Sätter upp databasen med dina valda fältnamn
+                    reactedUsers: { heart: [], fire: [], football: [], eggplant: [] }
+                });
+                document.getElementById('image-caption').value = "";
+                document.getElementById('image-file').value = "";
+                document.getElementById('file-label-text').innerHTML = `
+                    <span style="font-size: 2.2rem;">🖼️</span>
+                    <span style="font-size: 1.05rem; color: #fff;">Välj eller ta en bild</span>
+                    <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 400;">Format: JPG, PNG (Komprimeras automatiskt)</span>
+                `;
+                selectedBase64Image = null;
+                loadPhotoFeed();
+            } catch (error) { alert(error.message); } finally { uploadBtn.disabled = false; }
+        });
+    
+        // Hämta flödet från Firestore och rita ut inlägg samt nya emojis
+        async function loadPhotoFeed() {
+            const feedContainer = document.getElementById('feed-container');
+            try {
+                const q = query(collection(db, "photos"), orderBy("createdAt", "desc"));
+                const querySnapshot = await getDocs(q);
+                if (querySnapshot.empty) { feedContainer.innerHTML = '<div class="no-posts">Inga bilder ännu.</div>'; return; }
+                let html = "";
+                
+                const currentUserId = currentUser ? currentUser.uid : null;
+    
+                querySnapshot.forEach((documentSnapshot) => {
+                    const data = documentSnapshot.data();
+                    const postId = documentSnapshot.id;
+                    
+                    let dateStr = "";
+                    if(data.createdAt) { 
+                        const d = new Date(data.createdAt); 
+                        dateStr = d.toLocaleDateString('sv-SE') + " " + d.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}); 
+                    }
+                    
+                    let displayName = data.username || "Tippare";
+                    if(displayName.includes('@')) displayName = displayName.split('@')[0];
+                    const gradient = getAvatarGradient(displayName);
+                    
+                    // Hämta listor över vilka som reagerat från databasen
+                    const reactedUsers = data.reactedUsers || {};
+                    const hearts = reactedUsers.heart || [];
+                    const fires = reactedUsers.fire || [];
+                    const footballs = reactedUsers.football || [];
+                    const eggplants = reactedUsers.eggplant || [];
+    
+                    // Kolla om inloggade användaren har reagerat
+                    const hasHeart = currentUserId ? hearts.includes(currentUserId) : false;
+                    const hasFire = currentUserId ? fires.includes(currentUserId) : false;
+                    const hasFootball = currentUserId ? footballs.includes(currentUserId) : false;
+                    const hasEggplant = currentUserId ? eggplants.includes(currentUserId) : false;
+    
+                    html += `
+                        <div class="post-card">
+                            <div class="post-header">
+                                <div class="post-user-info">
+                                    <div class="user-avatar" style="background:${gradient}">${displayName.substring(0,2)}</div>
+                                    <span class="post-user">${displayName}</span>
+                                </div>
+                                <span class="post-time">${dateStr}</span>
+                            </div>
+                            <div class="post-img-container"><img class="post-img" src="${data.image}"></div>
+                            <div class="post-footer">
+                                ${data.caption ? `<div class="post-caption"><strong>${displayName}</strong> ${data.caption}</div>` : ''}
+                                
+                                <div class="reaction-container">
+                                    <button class="reaction-btn ${hasHeart ? 'active' : ''}" onclick="reactToPost('${postId}', 'heart', ${hasHeart})">❤️ <span>${hearts.length}</span></button>
+                                    <button class="reaction-btn ${hasFire ? 'active' : ''}" onclick="reactToPost('${postId}', 'fire', ${hasFire})">🔥 <span>${fires.length}</span></button>
+                                    <button class="reaction-btn ${hasFootball ? 'active' : ''}" onclick="reactToPost('${postId}', 'football', ${hasFootball})">⚽️ <span>${footballs.length}</span></button>
+                                    <button class="reaction-btn ${hasEggplant ? 'active' : ''}" onclick="reactToPost('${postId}', 'eggplant', ${hasEggplant})">🍆 <span>${eggplants.length}</span></button>
+                                </div>
+    
+                                <button class="btn-save" style="margin-top: 10px;" onclick="saveToCameraRoll('${data.image}', 'vm2026.jpg')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                    Spara till enhet
+                                </button>
+                            </div>
+                        </div>`;
+                });
+                feedContainer.innerHTML = html;
+            } catch (error) { 
+                console.error(error);
+                feedContainer.innerHTML = '<div class="no-posts">Kunde inte hämta flödet. Kontrollera Firestore-regler.</div>'; 
+            }
+        }
+    </script>
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
