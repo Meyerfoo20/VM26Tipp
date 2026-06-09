@@ -845,7 +845,7 @@
         <section id="step-3" class="view-section">
             <div class="match-navigation">
                 <button class="nav-arrow-btn" id="prev-match-btn" onclick="changeMatch(-1)">← Föregående</button>
-                <div id="current-match-indicator" class="nav-title" style="font-size: 1.2rem;">Match 1/31</div>
+                <div id="current-match-indicator" class="nav-title" style="font-size: 1.2rem;">Match 1/31 (Du måste också välja resultat, exempelvis 2-1)</div>
                 <button class="nav-arrow-btn" id="next-match-btn" onclick="changeMatch(1)">Nästa →</button>
             </div>
 
@@ -872,7 +872,7 @@
                                 <th class="td-center">Grupp (1p)</th>
                                 <th class="td-center">Treor (2p)</th>
                                 <th class="td-center">Slutspel</th>
-                                <th class="td-center" style="color: var(--amber);">Totalt P</th>
+                                <th class="td-center" style="color: var(--amber);">Totalt P / 243p</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body"></tbody>
@@ -1530,12 +1530,24 @@
         userPredictions.matches[`m${matchId}`].winner = teamName;
         await saveScore(matchId); 
         const match = playoffMatches.find(m => m.id === matchId);
+        
+        // Hantera vinnaren till nästa match
         if (match.nextMatchId !== null) {
             const nextMatch = playoffMatches.find(m => m.id === match.nextMatchId);
             const oldTeamName = match.slot === 1 ? nextMatch.t1 : nextMatch.t2;
             if (oldTeamName !== teamName && oldTeamName !== '?') { invalidateFutureMatches(match.nextMatchId); }
             if (match.slot === 1) nextMatch.t1 = teamName; else nextMatch.t2 = teamName;
         }
+
+        // NYTT: Hantera förloraren till bronsmatchen (om det är en semifinal)
+        if (match.bronzeMatchId !== null && match.bronzeMatchId !== undefined) {
+            const bronzeMatch = playoffMatches.find(m => m.id === match.bronzeMatchId);
+            const loserName = (teamName === match.t1) ? match.t2 : match.t1;
+            const oldLoserName = match.slot === 1 ? bronzeMatch.t1 : bronzeMatch.t2;
+            if (oldLoserName !== loserName && oldLoserName !== '?') { invalidateFutureMatches(match.bronzeMatchId); }
+            if (match.slot === 1) bronzeMatch.t1 = loserName; else bronzeMatch.t2 = loserName;
+        }
+
         renderActiveMatch();
         await saveUserPredictions();
         checkTournamentComplete();
