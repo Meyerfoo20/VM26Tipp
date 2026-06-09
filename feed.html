@@ -438,6 +438,43 @@
             animation: spin 1s linear infinite;
         }
 
+        /* --- EMOJI REAKTIONER --- */
+        .reaction-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+
+        .reaction-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .reaction-btn:hover {
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.3);
+            color: #fff;
+            transform: scale(1.05);
+        }
+
+        .reaction-btn.active {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: var(--amber);
+            color: var(--amber);
+        }
+
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.6; box-shadow: 0 0 14px var(--accent-green); } }
     </style>
@@ -501,7 +538,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB9r1e68Vte3S4Ui8OiuBoSdR8p8uigeSc",
@@ -541,6 +578,23 @@
             document.body.removeChild(link);
         } catch (err) {
             alert("Långtryck på bilden för att spara den i din kamerarull.");
+        }
+    };
+
+    // Funktion för att hantera emojiklick och uppdatera Firestore
+    window.reactToPost = async function(postId, emojiType) {
+        try {
+            const postRef = doc(db, "photos", postId);
+            
+            // Öka räknaren för just denna emoji med 1 i Firestore
+            await updateDoc(postRef, {
+                [`reactions.${emojiType}`]: increment(1)
+            });
+            
+            // Ladda om flödet för att visa det nya antalet
+            loadPhotoFeed();
+        } catch (error) {
+            console.error("Kunde inte registrera reaktion:", error);
         }
     };
 
@@ -636,42 +690,69 @@ document.getElementById('image-file').addEventListener('change', function(e) {
     });
 
     // Hämta flödet
-    async function loadPhotoFeed() {
-        const feedContainer = document.getElementById('feed-container');
-        try {
-            const q = query(collection(db, "photos"), orderBy("createdAt", "desc"));
-            const querySnapshot = await getDocs(q);
-            if (querySnapshot.empty) { feedContainer.innerHTML = '<div class="no-posts">Inga bilder ännu.</div>'; return; }
-            let html = "";
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                let dateStr = "";
-                if(data.createdAt) { const d = new Date(data.createdAt); dateStr = d.toLocaleDateString('sv-SE') + " " + d.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}); }
-                let displayName = data.username || "Tippare";
-                if(displayName.includes('@')) displayName = displayName.split('@')[0];
-                const gradient = getAvatarGradient(displayName);
-                html += `
-                    <div class="post-card">
-                        <div class="post-header">
-                            <div class="post-user-info"><div class="user-avatar" style="background:${gradient}">${displayName.substring(0,2)}</div><span class="post-user">${displayName}</span></div>
-                            <span class="post-time">${dateStr}</span>
+    // Hämta flödet med emojireaktioner
+async function loadPhotoFeed() {
+    const feedContainer = document.getElementById('feed-container');
+    try {
+        const q = query(collection(db, "photos"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) { feedContainer.innerHTML = '<div class="no-posts">Inga bilder ännu.</div>'; return; }
+        let html = "";
+        
+        querySnapshot.forEach((documentSnapshot) => {
+            const data = documentSnapshot.data();
+            const postId = documentSnapshot.id; // Hämta dokumentets ID från Firestore
+            
+            let dateStr = "";
+            if(data.createdAt) { 
+                const d = new Date(data.createdAt); 
+                dateStr = d.toLocaleDateString('sv-SE') + " " + d.toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'}); 
+            }
+            
+            let displayName = data.username || "Tippare";
+            if(displayName.includes('@')) displayName = displayName.split('@')[0];
+            const gradient = getAvatarGradient(displayName);
+            
+            // Hämta sparade reaktioner eller sätt till 0 om de inte finns ännu
+            const reactions = data.reactions || {};
+            const heartCount = reactions.heart || 0;
+            const laughCount = reactions.laugh || 0;
+            const wowCount = reactions.wow || 0;
+            const fireCount = reactions.fire || 0;
+
+            html += `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="post-user-info">
+                            <div class="user-avatar" style="background:${gradient}">${displayName.substring(0,2)}</div>
+                            <span class="post-user">${displayName}</span>
                         </div>
-                        <div class="post-img-container"><img class="post-img" src="${data.image}"></div>
-                        <div class="post-footer">
-                            ${data.caption ? `<div class="post-caption"><strong>${displayName}</strong> ${data.caption}</div>` : ''}
-                            <button class="btn-save" onclick="saveToCameraRoll('${data.image}', 'vm2026.jpg')">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                Spara till enhet
-                            </button>
+                        <span class="post-time">${dateStr}</span>
+                    </div>
+                    <div class="post-img-container"><img class="post-img" src="${data.image}"></div>
+                    <div class="post-footer">
+                        ${data.caption ? `<div class="post-caption"><strong>${displayName}</strong> ${data.caption}</div>` : ''}
+                        
+                        <div class="reaction-container">
+                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'heart')">❤️ <span>${heartCount}</span></button>
+                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'laugh')">😂 <span>${laughCount}</span></button>
+                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'aubergine')">🍆 <span>${aubergineCount}</span></button>
+                            <button class="reaction-btn" onclick="reactToPost('${postId}', 'fire')">🔥 <span>${fireCount}</span></button>
                         </div>
-                    </div>`;
-            });
-            feedContainer.innerHTML = html;
-        } catch (error) { 
-            console.error(error);
-            feedContainer.innerHTML = '<div class="no-posts">Kunde inte hämta flödet. Kontrollera Firestore-regler.</div>'; 
-        }
+
+                        <button class="btn-save" style="margin-top: 10px;" onclick="saveToCameraRoll('${data.image}', 'vm2026.jpg')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Spara till enhet
+                        </button>
+                    </div>
+                </div>`;
+        });
+        feedContainer.innerHTML = html;
+    } catch (error) { 
+        console.error(error);
+        feedContainer.innerHTML = '<div class="no-posts">Kunde inte hämta flödet. Kontrollera Firestore-regler.</div>'; 
     }
+}
 </script>
 <script>
     if ('serviceWorker' in navigator) {
