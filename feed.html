@@ -86,8 +86,25 @@
         .post-meta-details { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-muted); }
         .post-location { color: var(--amber); font-weight: 600; display: inline-flex; align-items: center; gap: 2px; }
 
-        .post-img-container { width: 100%; background: #02050f; position: relative; display: flex; justify-content: center; align-items: center; }
-        .post-img { width: 100%; max-height: 580px; object-fit: cover; display: block; }
+        .post-img-container { width: 100%; background: #02050f; position: relative; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .post-img { width: 100%; max-height: 580px; object-fit: cover; display: block; user-select: none; -webkit-user-drag: none; }
+
+        /* Animerat hjärta vid dubbelklick */
+        .like-heart-overlay {
+            position: absolute;
+            font-size: 5rem;
+            color: #ef4444;
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6));
+            z-index: 10;
+        }
+        .like-heart-overlay.animate {
+            opacity: 1;
+            transform: scale(1);
+        }
 
         .post-actions-bar { padding: 12px 14px 4px 14px; display: flex; justify-content: space-between; align-items: center; }
         .actions-left { display: flex; gap: 12px; }
@@ -101,6 +118,19 @@
         .btn-save-insta { background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 6px; border-radius: 50%; transition: all 0.2s; }
         .btn-save-insta:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
+        /* NYTT: Klickbara taggar i flödet */
+        .clickable-tag {
+            color: var(--amber);
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .clickable-tag:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
         /* --- PROFILBILD EDIT SYSTEM --- */
         .modal-avatar-wrapper { position: relative; display: inline-block; cursor: pointer; }
         .avatar-edit-overlay { position: absolute; bottom: 0; right: 0; background: var(--amber); width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; border: 2px solid var(--bg-main); box-shadow: 0 2px 6px rgba(0,0,0,0.4); transition: transform 0.2s; }
@@ -109,6 +139,41 @@
         /* --- CHECKBOX DESIGN --- */
         .checkbox-container { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: #cbd5e1; cursor: pointer; font-weight: 600; background: rgba(251, 191, 36, 0.05); padding: 8px 12px; border-radius: 10px; border: 1px dashed rgba(251, 191, 36, 0.3); }
         .checkbox-container input { cursor: pointer; width: 16px; height: 16px; accent-color: var(--amber); }
+
+        /* NYTT: Söklista/Dropdown för taggar */
+        .tag-input-wrapper { position: relative; width: 100%; }
+        .tags-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 160px;
+            overflow-y: auto;
+            z-index: 500;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .tags-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+            transition: background 0.2s;
+        }
+        .tags-dropdown-item:hover {
+            background: rgba(251, 191, 36, 0.1);
+        }
+        .tags-dropdown-item-name {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #fff;
+        }
 
         /* --- RESTEN AV DESIGNEN --- */
         .comments-list { display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 4px; }
@@ -183,7 +248,7 @@
             <div id="my-profile-header-block"></div>
         </header>
 
-        <!-- UPPDATERAD TILL VECKANS UTMANING WIDGET -->
+        <!-- VECKANS UTMANING WIDGET -->
         <div class="challenge-box">
             <div class="challenge-icon">🏆</div>
             <div class="challenge-details">
@@ -224,7 +289,14 @@
                 <input type="text" id="image-location" placeholder="📍 Lägg till plats (t.ex. Stockholm, Supportersoffan)...">
             </div>
             
-            <!-- Checkbox justerad för veckans utmaning -->
+            <!-- NYTT: Inputgrupp med inbyggd sökdropdown för taggar -->
+            <div class="form-group">
+                <div class="tag-input-wrapper">
+                    <input type="text" id="image-tags" placeholder="🏷️ Tryck här för att välja vänner att tagga (separera med kommatecken)..." autocomplete="off">
+                    <div class="tags-dropdown" id="tags-search-dropdown"></div>
+                </div>
+            </div>
+            
             <div class="form-group">
                 <label class="checkbox-container">
                     <input type="checkbox" id="participate-challenge">
@@ -301,17 +373,10 @@
             const startDate = new Date("2026-06-08");
             const today = new Date();
             const timeDiff = today - startDate;
-            
-            // Räkna ut hur många veckor som passerat (0 = vecka 1, 1 = vecka 2 osv)
             let weekIndex = Math.floor(timeDiff / (1000 * 60 * 60 * 24 * 7));
-            
-            // Säkerställ att vi håller oss mellan vecka 1 och 5 (index 0 - 4). Fallbackar till vecka 1 om vi är innan startdatum.
             if (weekIndex < 0) weekIndex = 0;
             if (weekIndex > 4) weekIndex = 4; 
-            
-            // Uppdatera widgetens titel med aktuell vecka
             document.getElementById('challenge-title-text').innerText = `Veckans Utmaning (v.${weekIndex + 1})`;
-            
             return weeklyChallenges[weekIndex];
         }
 
@@ -387,6 +452,19 @@
                 loadPhotoFeed();
             } catch (error) { console.error(error); }
         };
+
+        window.handleImageDoubleClick = function(postId, hasReacted) {
+            const heartOverlay = document.getElementById(`heart-overlay-${postId}`);
+            if (heartOverlay) {
+                heartOverlay.classList.add('animate');
+                setTimeout(() => {
+                    heartOverlay.classList.remove('animate');
+                }, 700);
+            }
+            if (!hasReacted) {
+                window.reactToPost(postId, 'heart', false);
+            }
+        };
     
         window.addComment = async function(postId) {
             if (!currentUser) return;
@@ -447,6 +525,27 @@
 
         window.triggerAvatarUpload = function() {
             document.getElementById('avatar-upload-input').click();
+        };
+
+        /* NYTT: Hjälpfunktion för att leta upp profil via bara användarnamnet (används när man klickar på en tagg) */
+        window.openUserProfileByName = function(username) {
+            const cleanedTarget = username.toLowerCase().trim();
+            let foundUid = null;
+            let foundName = username;
+
+            for (const [uid, prof] of Object.entries(allCachedProfiles)) {
+                const currentName = cleanUsername(getUserDisplayName(uid, prof.username || prof.displayName)).toLowerCase();
+                if (currentName === cleanedTarget) {
+                    foundUid = uid;
+                    foundName = getUserDisplayName(uid, prof.username || prof.displayName);
+                    break;
+                }
+            }
+            if (foundUid) {
+                window.openUserProfile(foundUid, foundName);
+            } else {
+                alert(`Kunde inte hitta profilen för ${username}.`);
+            }
         };
 
         window.openUserProfile = function(targetUserId, targetUsername) {
@@ -641,24 +740,108 @@
             };
             reader.readAsDataURL(file);
         });
+
+        /* NYTT: Logik för dropdown-sökning och automatisk ifyllnad när man taggar användare */
+        const tagInput = document.getElementById('image-tags');
+        const tagsDropdown = document.getElementById('tags-search-dropdown');
+
+        function showTagsDropdown(filterText) {
+            let currentTokens = filterText.split(',').map(t => t.trim());
+            let lastToken = currentTokens[currentTokens.length - 1].toLowerCase();
+
+            // Skapa lista med unika registrerade användare
+            let usersList = [];
+            for (const [uid, prof] of Object.entries(allCachedProfiles)) {
+                const name = cleanUsername(getUserDisplayName(uid, prof.username || prof.displayName));
+                if (!usersList.some(u => u.name.toLowerCase() === name.toLowerCase())) {
+                    usersList.push({ uid, name, profile: prof });
+                }
+            }
+
+            // Filtrera baserat på det man skrivit sist
+            let filtered = usersList.filter(u => u.name.toLowerCase().includes(lastToken));
+
+            if (filtered.length > 0) {
+                let dropdownHtml = "";
+                filtered.forEach(u => {
+                    dropdownHtml += `
+                        <div class="tags-dropdown-item" onclick="selectUserToTag('${u.name}')">
+                            ${renderAvatarHtml(u.uid, u.name, "width:24px; height:24px; font-size:0.65rem;")}
+                            <span class="tags-dropdown-item-name">${u.name}</span>
+                        </div>
+                    `;
+                });
+                tagsDropdown.innerHTML = dropdownHtml;
+                tagsDropdown.style.display = 'block';
+            } else {
+                tagsDropdown.style.display = 'none';
+            }
+        }
+
+        window.selectUserToTag = function(username) {
+            let currentTokens = tagInput.value.split(',').map(t => t.trim());
+            currentTokens.pop(); // Ta bort den halvfärdiga sökningen
+            currentTokens.push(username); // Lägg till det valda fullständiga namnet
+            
+            tagInput.value = currentTokens.join(', ') + ', ';
+            tagsDropdown.style.display = 'none';
+            tagInput.focus();
+        };
+
+        tagInput.addEventListener('input', (e) => {
+            showTagsDropdown(e.target.value);
+        });
+
+        tagInput.addEventListener('focus', (e) => {
+            showTagsDropdown(e.target.value);
+        });
+
+        // Stäng söklistan om man klickar utanför
+        document.addEventListener('click', (e) => {
+            if (!tagInput.contains(e.target) && !tagsDropdown.contains(e.target)) {
+                tagsDropdown.style.display = 'none';
+            }
+        });
     
         document.getElementById('upload-btn').addEventListener('click', async () => {
             if (!currentUser || !selectedBase64Image) return;
             try {
                 const isChallenge = document.getElementById('participate-challenge').checked;
+                
+                const tagsInput = document.getElementById('image-tags').value.trim();
+                // Rensa bort tomma taggar och ta bort eventuella kvarlämnade "@" symboler i texten
+                const tagsArray = tagsInput ? tagsInput.split(',').map(t => t.trim().replace('@','')).filter(t => t.length > 0) : [];
+
+                if (tagsArray.length > 0) {
+                    const validUsernames = Object.keys(allCachedProfiles).map(uid => {
+                        const rawName = getUserDisplayName(uid, allCachedProfiles[uid].username || allCachedProfiles[uid].displayName);
+                        return cleanUsername(rawName).toLowerCase();
+                    });
+
+                    const invalidTags = tagsArray.filter(tag => !validUsernames.includes(tag.toLowerCase()));
+
+                    if (invalidTags.length > 0) {
+                        alert(`Det gick inte att publicera. Följande användare hittades inte i systemet: ${invalidTags.join(', ')}\n\nAnvänd gärna listan som dyker upp när du skriver!`);
+                        return;
+                    }
+                }
+
                 await addDoc(collection(db, "photos"), {
                     userId: currentUser.uid, 
                     username: getUserDisplayName(currentUser.uid, currentUser.displayName || currentUser.email),
                     image: selectedBase64Image,
                     caption: document.getElementById('image-caption').value.trim(),
                     location: document.getElementById('image-location').value.trim(),
+                    tags: tagsArray, 
                     isChallengePost: isChallenge, 
                     createdAt: new Date().toISOString(),
                     reactedUsers: { heart: [], fire: [], football: [] },
                     comments: [] 
                 });
+                
                 document.getElementById('image-caption').value = "";
                 document.getElementById('image-location').value = "";
+                document.getElementById('image-tags').value = ""; 
                 document.getElementById('participate-challenge').checked = false;
                 selectedBase64Image = null; originalLoadedImage = null;
                 document.getElementById('preview-container').style.display = 'none';
@@ -701,8 +884,19 @@
                     const locationText = data.location ? `<span class="post-location">📍 ${data.location}</span>` : "";
 
                     const isChallengeStyleClass = data.isChallengePost ? "challenge-entry" : "";
-                    // Ändrad text till Veckans Utmaning på badgen
                     const challengeBadgeHtml = data.isChallengePost ? `<span class="challenge-badge">🏆 Veckans Utmaning</span>` : "";
+
+                    /* UPPDATERAD: Taggar renderas nu ut som klickbara element som länkar till personens profil */
+                    let tagsHtml = "";
+                    if (data.tags && data.tags.length > 0) {
+                        const links = data.tags.map(t => {
+                            const cleanT = cleanUsername(t);
+                            return `<span class="clickable-tag" onclick="openUserProfileByName('${cleanT}')">@${cleanT}</span>`;
+                        }).join(', ');
+                        tagsHtml = `<div style="padding: 0 14px; font-size: 0.82rem; color: var(--text-muted); font-weight: 500;">
+                                        🏷️ ${links}
+                                    </div>`;
+                    }
 
                     let commentsHtml = "";
                     (data.comments || []).forEach(c => {
@@ -735,9 +929,12 @@
                                 ${isMyPost ? `<button class="delete-btn" onclick="deletePost('${postId}')">✕</button>` : ''}
                             </div>
                             
-                            <div class="post-img-container">
+                            <div class="post-img-container" ondblclick="handleImageDoubleClick('${postId}', ${hasHeart})">
+                                <div class="like-heart-overlay" id="heart-overlay-${postId}">❤️</div>
                                 <img class="post-img" src="${data.image}">
                             </div>
+                            
+                            ${tagsHtml}
                             
                             <div class="post-actions-bar">
                                 <div class="actions-left">
