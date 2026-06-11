@@ -118,7 +118,7 @@
         .btn-save-insta { background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; padding: 6px; border-radius: 50%; transition: all 0.2s; }
         .btn-save-insta:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
-        /* NYTT: Klickbara taggar i flödet */
+        /* Klickbara taggar i flödet */
         .clickable-tag {
             color: var(--amber);
             font-weight: 700;
@@ -140,7 +140,7 @@
         .checkbox-container { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; color: #cbd5e1; cursor: pointer; font-weight: 600; background: rgba(251, 191, 36, 0.05); padding: 8px 12px; border-radius: 10px; border: 1px dashed rgba(251, 191, 36, 0.3); }
         .checkbox-container input { cursor: pointer; width: 16px; height: 16px; accent-color: var(--amber); }
 
-        /* NYTT: Söklista/Dropdown för taggar */
+        /* Söklista/Dropdown för taggar */
         .tag-input-wrapper { position: relative; width: 100%; }
         .tags-dropdown {
             position: absolute;
@@ -212,9 +212,11 @@
 
         .profile-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 8, 20, 0.9); backdrop-filter: blur(20px); z-index: 2000; display: none; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 40px 10px; }
         .profile-modal-content { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border); max-width: 500px; width: 100%; border-radius: 20px; padding: 24px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.05); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.05); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; z-index: 10; }
         .modal-profile-header { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 20px; }
-        .modal-avatar { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--amber); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px var(--amber-glow); }
+        
+        /* Tillagt: Tvinga markör till pekfinger vid hovring av profilbild i modalen */
+        .modal-avatar { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--amber); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px var(--amber-glow); cursor: pointer; }
         
         .profile-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 320px; margin: 10px 0; }
         .stat-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; }
@@ -232,6 +234,69 @@
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
 
         .delete-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; padding: 4px 8px; }
+
+        /* --- NYTT: DESIGN SYSTEM FÖR AVATAR-LIGHTBOX (FÖRSTORING) --- */
+        .avatar-lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 4, 10, 0.95);
+            backdrop-filter: blur(25px);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .avatar-lightbox-content {
+            width: 85vw;
+            max-width: 400px;
+            aspect-ratio: 1/1;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--amber);
+            box-shadow: 0 0 40px rgba(251, 191, 36, 0.4);
+            animation: lightboxZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .avatar-lightbox-content img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* Fallback i rutan om användaren saknar anpassad uppladdad bild (genererad css-avatar) */
+        .avatar-lightbox-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        .close-lightbox {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+        }
+
+        @keyframes lightboxZoomIn {
+            from { transform: scale(0.6); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
         @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.6; } }
     </style>
 </head>
@@ -248,7 +313,6 @@
             <div id="my-profile-header-block"></div>
         </header>
 
-        <!-- VECKANS UTMANING WIDGET -->
         <div class="challenge-box">
             <div class="challenge-icon">🏆</div>
             <div class="challenge-details">
@@ -257,12 +321,10 @@
             </div>
         </div>
 
-        <!-- STORIES KARUSELL -->
         <div class="users-carousel-container" id="users-carousel-section" style="display: none;">
             <div class="users-carousel" id="users-carousel-list"></div>
         </div>
 
-        <!-- POST/DELA FORMULÄR -->
         <div class="upload-card" id="upload-section" style="display:none;">
             <h2>Dela ett ögonblick ✨</h2>
             <div class="form-group">
@@ -289,7 +351,6 @@
                 <input type="text" id="image-location" placeholder="📍 Lägg till plats (t.ex. Stockholm, Supportersoffan)...">
             </div>
             
-            <!-- NYTT: Inputgrupp med inbyggd sökdropdown för taggar -->
             <div class="form-group">
                 <div class="tag-input-wrapper">
                     <input type="text" id="image-tags" placeholder="🏷️ Tryck här för att välja vänner att tagga (separera med kommatecken)..." autocomplete="off">
@@ -314,7 +375,6 @@
         <div class="feed" id="feed-container"></div>
     </div>
 
-    <!-- PROFIL POPUP -->
     <div class="profile-modal" id="profileModal">
         <div class="profile-modal-content">
             <button class="close-modal" id="closeModalBtn">&times;</button>
@@ -324,7 +384,11 @@
         </div>
     </div>
 
-    <!-- BOTTOM NAV -->
+    <div class="avatar-lightbox" id="avatarLightbox">
+        <button class="close-lightbox" id="closeLightboxBtn">&times;</button>
+        <div class="avatar-lightbox-content" id="avatarLightboxContent"></div>
+    </div>
+
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -527,7 +591,33 @@
             document.getElementById('avatar-upload-input').click();
         };
 
-        /* NYTT: Hjälpfunktion för att leta upp profil via bara användarnamnet (används när man klickar på en tagg) */
+        /* NYTT: Öppna en förstorad version (lightbox) av profilbilden */
+        window.enlargeProfileAvatar = function(userId, username) {
+            const lightbox = document.getElementById('avatarLightbox');
+            const contentBox = document.getElementById('avatarLightboxContent');
+            const profileDoc = allCachedProfiles[userId] || {};
+            const savedAvatar = profileDoc.avatar || null;
+
+            if (savedAvatar) {
+                contentBox.innerHTML = `<img src="${savedAvatar}" alt="Förstorad profilbild">`;
+            } else {
+                const cleanedName = cleanUsername(username);
+                const gradient = getAvatarGradient(cleanedName);
+                contentBox.innerHTML = `<div class="avatar-lightbox-fallback" style="background:${gradient}">${cleanedName.substring(0,2)}</div>`;
+            }
+            lightbox.style.display = 'flex';
+        };
+
+        // Stäng lightboxen vid klick på kryss eller utanför bilden
+        document.getElementById('closeLightboxBtn').addEventListener('click', () => {
+            document.getElementById('avatarLightbox').style.display = 'none';
+        });
+        document.getElementById('avatarLightbox').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('avatarLightbox')) {
+                document.getElementById('avatarLightbox').style.display = 'none';
+            }
+        });
+
         window.openUserProfileByName = function(username) {
             const cleanedTarget = username.toLowerCase().trim();
             let foundUid = null;
@@ -569,9 +659,14 @@
             const isMe = currentUser && currentUser.uid === targetUserId;
 
             const avatarMainHtml = renderAvatarHtml(targetUserId, absoluteUsername, "width:80px; height:80px; font-size:1.6rem;");
+            
+            /* UPPDATERAD: Lagt till onclick="enlargeProfileAvatar(...)" på profilbilden i profilvyn */
             const avatarWithUploadWrapper = isMe 
-                ? `<div class="modal-avatar-wrapper" onclick="triggerAvatarUpload()">${avatarMainHtml}<div class="avatar-edit-overlay">📸</div></div>`
-                : `<div class="modal-avatar">${avatarMainHtml}</div>`;
+                ? `<div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                     <div class="modal-avatar-wrapper" onclick="enlargeProfileAvatar('${targetUserId}', '${absoluteUsername}')">${avatarMainHtml}</div>
+                     <button class="btn-edit-bio" style="font-size:0.75rem; text-decoration:underline;" onclick="triggerAvatarUpload()">Ändra profilbild 📸</button>
+                   </div>`
+                : `<div class="modal-avatar" onclick="enlargeProfileAvatar('${targetUserId}', '${absoluteUsername}')">${avatarMainHtml}</div>`;
 
             headerBlock.innerHTML = `
                 ${avatarWithUploadWrapper}
@@ -611,16 +706,19 @@
             const file = e.target.files[0];
             if (!file || !currentUser) return;
             const reader = new FileReader();
-            reader.onload = async function(event) {
+            reader.onload = function(event) {
                 const img = new Image();
                 img.onload = async function() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    canvas.width = 150; canvas.height = 150;
-                    const min = Math.min(img.width, img.height);
-                    ctx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, 150, 150);
                     
-                    const avatarBase64 = canvas.toDataURL('image/jpeg', 0.85);
+                    canvas.width = 800; 
+                    canvas.height = 800;
+                    
+                    const min = Math.min(img.width, img.height);
+                    ctx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, 800, 800);
+                    
+                    const avatarBase64 = canvas.toDataURL('image/jpg', 0.80);
                     try {
                         const profileRef = doc(db, "profiles", currentUser.uid);
                         const existing = allCachedProfiles[currentUser.uid] || {};
@@ -741,7 +839,6 @@
             reader.readAsDataURL(file);
         });
 
-        /* NYTT: Logik för dropdown-sökning och automatisk ifyllnad när man taggar användare */
         const tagInput = document.getElementById('image-tags');
         const tagsDropdown = document.getElementById('tags-search-dropdown');
 
@@ -749,7 +846,6 @@
             let currentTokens = filterText.split(',').map(t => t.trim());
             let lastToken = currentTokens[currentTokens.length - 1].toLowerCase();
 
-            // Skapa lista med unika registrerade användare
             let usersList = [];
             for (const [uid, prof] of Object.entries(allCachedProfiles)) {
                 const name = cleanUsername(getUserDisplayName(uid, prof.username || prof.displayName));
@@ -758,7 +854,6 @@
                 }
             }
 
-            // Filtrera baserat på det man skrivit sist
             let filtered = usersList.filter(u => u.name.toLowerCase().includes(lastToken));
 
             if (filtered.length > 0) {
@@ -780,8 +875,8 @@
 
         window.selectUserToTag = function(username) {
             let currentTokens = tagInput.value.split(',').map(t => t.trim());
-            currentTokens.pop(); // Ta bort den halvfärdiga sökningen
-            currentTokens.push(username); // Lägg till det valda fullständiga namnet
+            currentTokens.pop(); 
+            currentTokens.push(username); 
             
             tagInput.value = currentTokens.join(', ') + ', ';
             tagsDropdown.style.display = 'none';
@@ -796,7 +891,6 @@
             showTagsDropdown(e.target.value);
         });
 
-        // Stäng söklistan om man klickar utanför
         document.addEventListener('click', (e) => {
             if (!tagInput.contains(e.target) && !tagsDropdown.contains(e.target)) {
                 tagsDropdown.style.display = 'none';
@@ -807,9 +901,7 @@
             if (!currentUser || !selectedBase64Image) return;
             try {
                 const isChallenge = document.getElementById('participate-challenge').checked;
-                
                 const tagsInput = document.getElementById('image-tags').value.trim();
-                // Rensa bort tomma taggar och ta bort eventuella kvarlämnade "@" symboler i texten
                 const tagsArray = tagsInput ? tagsInput.split(',').map(t => t.trim().replace('@','')).filter(t => t.length > 0) : [];
 
                 if (tagsArray.length > 0) {
@@ -850,7 +942,8 @@
                 loadPhotoFeed();
             } catch (error) { alert(error.message); }
         });
-    
+        
+
         async function loadPhotoFeed() {
             const feedContainer = document.getElementById('feed-container');
             try {
@@ -886,7 +979,6 @@
                     const isChallengeStyleClass = data.isChallengePost ? "challenge-entry" : "";
                     const challengeBadgeHtml = data.isChallengePost ? `<span class="challenge-badge">🏆 Veckans Utmaning</span>` : "";
 
-                    /* UPPDATERAD: Taggar renderas nu ut som klickbara element som länkar till personens profil */
                     let tagsHtml = "";
                     if (data.tags && data.tags.length > 0) {
                         const links = data.tags.map(t => {
