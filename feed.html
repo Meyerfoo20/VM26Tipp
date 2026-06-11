@@ -198,6 +198,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .post-user-info {
@@ -234,10 +235,20 @@
             font-size: 0.92rem;
         }
 
-        .post-time {
+        .post-meta-details {
+            display: flex;
+            align-items: center;
+            gap: 6px;
             font-size: 0.72rem;
             color: var(--text-muted);
-            margin-left: 4px;
+        }
+
+        .post-location {
+            color: var(--amber);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
         }
 
         .post-img-container {
@@ -247,7 +258,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
         }
 
         .post-img {
@@ -255,21 +265,6 @@
             max-height: 580px;
             object-fit: cover;
             display: block;
-        }
-
-        .double-tap-heart {
-            position: absolute;
-            font-size: 5rem;
-            color: #fff;
-            opacity: 0;
-            transform: scale(0);
-            pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 10;
-            filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.6));
-        }
-        .double-tap-heart.animate {
-            animation: heart-pop 0.8s ease forwards;
         }
 
         .post-actions-bar {
@@ -387,12 +382,6 @@
 
         .delete-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; padding: 4px 8px; }
 
-        @keyframes heart-pop {
-            0% { opacity: 0; transform: scale(0); }
-            30% { opacity: 0.9; transform: scale(1.2); }
-            50% { opacity: 0.9; transform: scale(1); }
-            100% { opacity: 0; transform: scale(0.6); }
-        }
         @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.6; } }
     </style>
 </head>
@@ -409,12 +398,10 @@
             <div id="my-profile-header-block"></div>
         </header>
 
-        <!-- INSTAGRAM STORIES KARUSELL -->
         <div class="users-carousel-container" id="users-carousel-section" style="display: none;">
             <div class="users-carousel" id="users-carousel-list"></div>
         </div>
 
-        <!-- POST/DELA FORMULÄR -->
         <div class="upload-card" id="upload-section" style="display:none;">
             <h2>Dela ett ögonblick ✨</h2>
             <div class="form-group">
@@ -424,7 +411,6 @@
                 <input type="file" id="image-file" accept="image/*" style="display: none;">
             </div>
 
-            <!-- Filterförhandsvisning och val -->
             <div class="preview-canvas-container" id="preview-container">
                 <canvas id="filter-canvas"></canvas>
             </div>
@@ -438,6 +424,9 @@
             <div class="form-group">
                 <input type="text" id="image-caption" placeholder="Skriv en bildtext...">
             </div>
+            <div class="form-group">
+                <input type="text" id="image-location" placeholder="📍 Lägg till plats (t.ex. New York, Supportersoffan)...">
+            </div>
             <button class="btn btn-primary" style="width:100%; justify-content: center;" id="upload-btn">Publicera</button>
         </div>
 
@@ -445,11 +434,9 @@
             Logga in på huvudsidan för att gå med i gemenskapen och dela dina egna VM-bilder.
         </div>
 
-        <!-- INSTAGRAM FLÖDE -->
         <div class="feed" id="feed-container"></div>
     </div>
 
-    <!-- PROFIL POPUP -->
     <div class="profile-modal" id="profileModal">
         <div class="profile-modal-content">
             <button class="close-modal" id="closeModalBtn">&times;</button>
@@ -458,7 +445,6 @@
         </div>
     </div>
 
-    <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -491,7 +477,7 @@
     
         let currentUser = null;
         let selectedBase64Image = null;
-        let originalLoadedImage = null; // Sparar elementet för omfiltrering
+        let originalLoadedImage = null; 
         let allCachedPhotos = []; 
         let allCachedProfiles = {}; 
 
@@ -532,7 +518,6 @@
             }
         }
 
-        // Global hjälpfunktion för snygg och relativ tidsangivelse (Inlägg & Kommentarer)
         function formatRelativeTime(isoString) {
             if (!isoString) return "Just nu";
             const now = new Date();
@@ -570,13 +555,6 @@
                 }
                 loadPhotoFeed();
             } catch (error) { console.error(error); }
-        };
-
-        window.handleDoubleTap = function(e, postId, hasReacted) {
-            const heartIcon = e.currentTarget.querySelector('.double-tap-heart');
-            heartIcon.classList.add('animate');
-            setTimeout(() => heartIcon.classList.remove('animate'), 800);
-            if (!hasReacted) { window.reactToPost(postId, 'heart', false); }
         };
     
         window.addComment = async function(postId) {
@@ -698,11 +676,9 @@
             modal.style.display = "flex";
         };
 
-        // BILD-FILTER LOGIK (N5) - Svartvitt "VM 1958" filter inbyggt
         window.applyFilterStyle = function(filterType) {
             if (!originalLoadedImage) return;
             
-            // Hantera aktiva CSS-klasser på knapparna
             const buttons = document.querySelectorAll('.filter-btn');
             buttons.forEach(b => b.classList.remove('active'));
             if (event && event.target) {
@@ -712,14 +688,12 @@
             const canvas = document.getElementById('filter-canvas');
             const ctx = canvas.getContext('2d');
             
-            // Kvadratisk beskärning
             canvas.width = 800; canvas.height = 800;
             const min = Math.min(originalLoadedImage.width, originalLoadedImage.height);
             ctx.drawImage(originalLoadedImage, (originalLoadedImage.width-min)/2, (originalLoadedImage.height-min)/2, min, min, 0, 0, 800, 800);
             
-            // Applicera filter via Canvas pixelmanipulation eller kompositskikt
             if (filterType === 'retro') {
-                ctx.fillStyle = 'rgba(230, 150, 40, 0.15)'; // Sepia/Varm ton
+                ctx.fillStyle = 'rgba(230, 150, 40, 0.15)'; 
                 ctx.globalCompositeOperation = 'multiply';
                 ctx.fillRect(0, 0, 800, 800);
                 ctx.globalCompositeOperation = 'source-over';
@@ -729,25 +703,22 @@
                 ctx.fillRect(0, 0, 800, 800);
                 ctx.globalCompositeOperation = 'source-over';
             } else if (filterType === 'vm1958') {
-                // Svartvitt filter (Luminans-metoden)
                 const imgData = ctx.getImageData(0, 0, 800, 800);
                 const data = imgData.data;
                 for (let i = 0; i < data.length; i += 4) {
                     const brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-                    data[i]     = brightness; // R
-                    data[i + 1] = brightness; // G
-                    data[i + 2] = brightness; // B
+                    data[i]     = brightness; 
+                    data[i + 1] = brightness; 
+                    data[i + 2] = brightness; 
                 }
                 ctx.putImageData(imgData, 0, 0);
 
-                // Lägg till svag vintage-kontrast
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
                 ctx.globalCompositeOperation = 'overlay';
                 ctx.fillRect(0, 0, 800, 800);
                 ctx.globalCompositeOperation = 'source-over';
             }
             
-            // Spara resultatet som slutgiltig Base64
             selectedBase64Image = canvas.toDataURL('image/jpeg', 0.80);
         };
 
@@ -817,13 +788,28 @@
             reader.onload = function(event) {
                 const img = new Image();
                 img.onload = function() {
-                    originalLoadedImage = img; // Spara referens
+                    originalLoadedImage = img; 
                     document.getElementById('preview-container').style.display = 'block';
                     document.getElementById('filter-controls').style.display = 'flex';
                     
-                    // Kör igång standardfilter (normal) direkt
                     applyFilterStyle('normal');
                     document.getElementById('file-label-text').innerText = "✓ Bild vald!";
+
+                    // GEOLOKALISERING: Försök att hämta användarens position automatiskt
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(async (position) => {
+                            try {
+                                const lat = position.coords.latitude;
+                                const lon = position.coords.longitude;
+                                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                                const geoData = await res.json();
+                                const city = geoData.address.city || geoData.address.town || geoData.address.village || geoData.address.county || "";
+                                if(city) {
+                                    document.getElementById('image-location').value = city;
+                                }
+                            } catch (err) { console.log("Kunde inte hämta ortnamn automatiskt."); }
+                        }, (err) => { console.log("GPS-åtkomst nekad eller ej tillgänglig."); });
+                    }
                 };
                 img.src = event.target.result;
             };
@@ -839,11 +825,13 @@
                     username: getUserDisplayName(currentUser.uid, myFallbackName),
                     image: selectedBase64Image,
                     caption: document.getElementById('image-caption').value.trim(),
+                    location: document.getElementById('image-location').value.trim(), // Sparar platsen
                     createdAt: new Date().toISOString(),
                     reactedUsers: { heart: [], fire: [], football: [] },
                     comments: [] 
                 });
                 document.getElementById('image-caption').value = "";
+                document.getElementById('image-location').value = "";
                 selectedBase64Image = null;
                 originalLoadedImage = null;
                 document.getElementById('preview-container').style.display = 'none';
@@ -884,13 +872,14 @@
                     const isMyPost = data.userId === uid;
                     const postUserDynamicName = getUserDisplayName(data.userId, data.username);
                     
-                    // Formatera tiden för själva inlägget
                     const postTimeText = formatRelativeTime(data.createdAt);
+                    
+                    // Skapa plats-sträng om den existerar på inlägget
+                    const locationText = data.location ? `<span class="post-location">📍 ${data.location}</span>` : "";
 
                     let commentsHtml = "";
                     (data.comments || []).forEach(c => {
                         const commentUserDynamicName = getUserDisplayName(c.userId, c.username);
-                        // Formatera tiden för varje kommentar
                         const commentTimeText = formatRelativeTime(c.createdAt);
                         commentsHtml += `
                             <div class="comment-item">
@@ -911,13 +900,15 @@
                                         ${renderAvatarHtml(data.userId || '', postUserDynamicName)}
                                         <span class="post-user">${cleanUsername(postUserDynamicName)}</span>
                                     </div>
-                                    <span class="post-time">• ${postTimeText}</span>
+                                    <div class="post-meta-details">
+                                        <span>• ${postTimeText}</span>
+                                        ${locationText}
+                                    </div>
                                 </div>
                                 ${isMyPost ? `<button class="delete-btn" onclick="deletePost('${postId}')">✕</button>` : ''}
                             </div>
                             
-                            <div class="post-img-container" ondblclick="handleDoubleTap(event, '${postId}', ${hasHeart})">
-                                <span class="double-tap-heart">❤️</span>
+                            <div class="post-img-container">
                                 <img class="post-img" src="${data.image}">
                             </div>
                             
