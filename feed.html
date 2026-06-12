@@ -315,6 +315,142 @@
             justify-content: center;
             font-size: 1.6rem;
         }
+        /* --- VM LIVE CHATT --- */
+        .live-chat-badge {
+            position: fixed;
+            bottom: 100px; /* Placerad ovanför botten-navigeringen */
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--amber) 0%, #d97706 100%);
+            border-radius: 50%;
+            box-shadow: 0 4px 20px var(--amber-glow), 0 0 15px rgba(251, 191, 36, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1500;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .live-chat-badge:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        .chat-pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--amber);
+            opacity: 0.4;
+            animation: pulse-dot 2s infinite;
+            z-index: -1;
+        }
+
+        /* Chattfönster Modal */
+        .chat-window-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 8, 20, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 10px;
+        }
+        .chat-window-content {
+            max-width: 550px;
+            width: 100%;
+            height: 80vh;
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: lightboxZoomIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .chat-header {
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 900;
+            color: #fff;
+        }
+        .chat-messages-area {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .chat-messages-area::-webkit-scrollbar { width: 5px; }
+        .chat-messages-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* Meddelandestilar */
+        .chat-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            word-break: break-word;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-msg.other {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border);
+            align-self: flex-start;
+            border-top-left-radius: 4px;
+        }
+        .chat-msg.me {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.4) 100%);
+            border: 1px solid var(--accent-green);
+            align-self: flex-end;
+            border-top-right-radius: 4px;
+        }
+        .chat-msg-user {
+            font-weight: 800;
+            font-size: 0.75rem;
+            color: var(--amber);
+            margin-bottom: 2px;
+        }
+        .chat-msg.me .chat-msg-user {
+            color: var(--accent-green);
+        }
+        .chat-msg-text {
+            color: #f8fafc;
+        }
+        .chat-msg-time {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            align-self: flex-end;
+            margin-top: 4px;
+        }
+
+        /* Input-fältet i chatten */
+        .chat-footer {
+            padding: 14px;
+            background: rgba(7, 11, 22, 0.9);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes lightboxZoomIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -326,7 +462,7 @@
     <div class="container">
         <header>
             <div class="logo-area">
-                <h1>📸 VM-Flödet</h1>
+                <h1>VM-Flödet</h1>
                 <div class="live-badge">
                     <div class="live-dot"></div> Liveögonblick
                 </div>
@@ -446,6 +582,33 @@
         <div class="avatar-lightbox-content" id="avatarLightboxContent"></div>
     </div>
 
+    <div class="live-chat-badge" id="openChatBtn" onclick="toggleVMChat(true)">
+        <div class="chat-pulse"></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#040814" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+    </div>
+    
+    <div class="chat-window-modal" id="vmChatModal">
+        <div class="chat-window-content">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <div class="live-dot"></div>
+                    <span>VM-Livechatt <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">(24h historik)</span></span>
+                </div>
+                <button class="close-modal" style="position:static; width:32px; height:32px;" onclick="toggleVMChat(false)">&times;</button>
+            </div>
+            
+            <div class="chat-messages-area" id="chatMessagesContainer">
+                </div>
+            
+            <div class="chat-footer">
+                <input type="text" id="chatMessageInput" placeholder="Skriv något..." onkeydown="if(event.key === 'Enter') sendLiveChatMessage()">
+                <button class="btn btn-primary" style="padding: 0 16px;" onclick="sendLiveChatMessage()">Skicka</button>
+            </div>
+        </div>
+    </div>
+
     <nav class="bottom-nav">
         <a href="index.html" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -460,7 +623,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
         const firebaseConfig = {
             apiKey: "AIzaSyB9r1e68Vte3S4Ui8OiuBoSdR8p8uigeSc",
@@ -1443,6 +1606,105 @@
                 });
                 feedContainer.innerHTML = html;
             } catch (error) { console.error(error); }
+        }
+
+        // Funktion för att öppna eller stänga chatten
+        window.toggleVMChat = function(show) {
+            const modal = document.getElementById('vmChatModal');
+            if (show) {
+                modal.style.display = 'flex';
+                initLiveChatListener(); // Startar lyssnaren när chatten öppnas
+            } else {
+                modal.style.display = 'none';
+                if (window.chatUnsubscribe) window.chatUnsubscribe(); // Stänger lyssnaren för att spara prestanda
+            }
+        }
+
+        // Skicka meddelande till Firebase (Anpassad för Modular v9+)
+        window.sendLiveChatMessage = async function() {
+            const input = document.getElementById('chatMessageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!currentUser) {
+                alert("Du måste vara inloggad för att skriva i livechatten!");
+                return;
+            }
+
+            try {
+                // Använder addDoc och collection() enligt v9-standarden
+                await addDoc(collection(db, 'livechat'), {
+                    uid: currentUser.uid,
+                    username: currentUser.displayName || 'Anonym Supporter',
+                    text: text,
+                    timestamp: new Date().toISOString() // Ersätter serverTimestamp med ISO-sträng för enkelhet
+                });
+                input.value = '';
+            } catch (error) {
+                console.error("Fel vid sändning av chattmeddelande: ", error);
+            }
+        }
+
+        // Initiera Realtids-lyssnare för chatten med 24-timmars filtrering
+        function initLiveChatListener() {
+            const container = document.getElementById('chatMessagesContainer');
+            
+            // Tidsgräns: 24 timmar bakåt i tiden
+            const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+            // Rensar gamla lyssnare om de finns
+            if (window.chatUnsubscribe) window.chatUnsubscribe();
+
+            // Skapar en modulär query med collection(), query(), where() och orderBy()
+            const chatQuery = query(
+                collection(db, 'livechat'),
+                orderBy('timestamp', 'asc')
+            );
+
+            window.chatUnsubscribe = onSnapshot(chatQuery, snapshot => {
+                let html = '';
+                
+                if (snapshot.empty) {
+                    html = `<div style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-top:20px;">Inga meddelanden än. Skriv något och starta diskussionen! ⚽</div>`;
+                    container.innerHTML = html;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Filtrera i efterhand om timestamp är en sträng
+                    if (data.timestamp && data.timestamp < twentyFourHoursAgo) return;
+
+                    const isMe = data.uid === (currentUser ? currentUser.uid : null);
+                    const msgClass = isMe ? 'me' : 'other';
+                    
+                    // Formatera tid (t.ex. 14:32)
+                    const dateObj = new Date(data.timestamp);
+                    const timeStr = dateObj.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+
+                    html += `
+                        <div class="chat-msg ${msgClass}">
+                            <span class="chat-msg-user">${isMe ? 'Du' : cleanUsername(data.username)}</span>
+                            <span class="chat-msg-text">${escapeHtml(data.text)}</span>
+                            <span class="chat-msg-time">${timeStr}</span>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight; // Autoscrolla till botten
+            }, error => {
+                console.error("Chatt-fel: ", error);
+            });
+        }
+        // Säkerhetsfunktion för att undvika kodinjektion (XSS) i chatten
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>
