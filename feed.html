@@ -379,6 +379,13 @@
         <div class="profile-modal-content">
             <button class="close-modal" id="closeModalBtn">&times;</button>
             <input type="file" id="avatar-upload-input" accept="image/*" style="display:none;">
+            <div id="avatar-adjuster-controls" style="display:none; flex-direction:column; gap:8px; width:100%; max-width:250px; margin: 10px auto; background:rgba(0,0,0,0.4); padding:10px; border-radius:10px; border:1px solid var(--border);">
+                <p style="font-size:0.75rem; color:var(--amber); font-weight:700; text-align:center;">Justera bildens position 👇</p>
+                <label style="font-size:0.7rem; display:flex; justify-content:space-between;"><span>Vänster / Höger</span><input type="range" id="avatar-offset-x" min="0" max="100" value="50" style="width:70%; accent-color:var(--amber);"></label>
+                <label style="font-size:0.7rem; display:flex; justify-content:space-between;"><span>Upp / Ned</span><input type="range" id="avatar-offset-y" min="0" max="100" value="50" style="width:70%; accent-color:var(--amber);"></label>
+                <button id="avatar-save-btn" class="btn btn-primary" style="font-size:0.75rem; padding:6px 12px; margin-top:5px; justify-content:center;">Spara Position & Bild 💾</button>
+            </div>
+            <div class="modal-profile-header" id="modalProfileHeader"></div>
             <div class="modal-profile-header" id="modalProfileHeader"></div>
             <div class="profile-gallery" id="profileGallery"></div>
         </div>
