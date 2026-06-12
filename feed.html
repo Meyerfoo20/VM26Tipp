@@ -718,7 +718,7 @@
                     const min = Math.min(img.width, img.height);
                     ctx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, 800, 800);
                     
-                    const avatarBase64 = canvas.toDataURL('image/jpg', 0.80);
+                    const avatarBase64 = canvas.toDataURL('image/jpeg', 0.80);
                     try {
                         const profileRef = doc(db, "profiles", currentUser.uid);
                         const existing = allCachedProfiles[currentUser.uid] || {};
