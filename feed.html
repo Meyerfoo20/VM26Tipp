@@ -213,9 +213,15 @@
         .profile-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 8, 20, 0.9); backdrop-filter: blur(20px); z-index: 2000; display: none; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 40px 10px; }
         .profile-modal-content { background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border); max-width: 500px; width: 100%; border-radius: 20px; padding: 24px; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
         .close-modal { position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.05); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; z-index: 10; }
+        
+        /* --- POST DETAIL MODAL --- */
+        .post-detail-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(4, 8, 20, 0.92); backdrop-filter: blur(15px); z-index: 2500; display: none; justify-content: center; align-items: center; padding: 20px 10px; }
+        .post-detail-modal-content { max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--bg-main); border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 25px 60px rgba(0,0,0,0.8); position: relative; }
+        .post-detail-modal-content::-webkit-scrollbar { width: 6px; }
+        .post-detail-modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
         .modal-profile-header { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 20px; }
         
-        /* Tillagt: Tvinga markör till pekfinger vid hovring av profilbild i modalen */
         .modal-avatar { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--amber); display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px var(--amber-glow); cursor: pointer; }
         
         .profile-stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 320px; margin: 10px 0; }
@@ -235,7 +241,7 @@
 
         .delete-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-weight: bold; padding: 4px 8px; }
 
-        /* --- NYTT: DESIGN SYSTEM FÖR AVATAR-LIGHTBOX (FÖRSTORING) --- */
+        /* --- LIGHTBOX FÖR PROFILBILD --- */
         .avatar-lightbox {
             position: fixed;
             top: 0;
@@ -264,7 +270,6 @@
             height: 100%;
             object-fit: cover;
         }
-        /* Fallback i rutan om användaren saknar anpassad uppladdad bild (genererad css-avatar) */
         .avatar-lightbox-fallback {
             width: 100%;
             height: 100%;
@@ -386,8 +391,38 @@
                 <button id="avatar-save-btn" class="btn btn-primary" style="font-size:0.75rem; padding:6px 12px; margin-top:5px; justify-content:center;">Spara Position & Bild 💾</button>
             </div>
             <div class="modal-profile-header" id="modalProfileHeader"></div>
-            <div class="modal-profile-header" id="modalProfileHeader"></div>
             <div class="profile-gallery" id="profileGallery"></div>
+        </div>
+    </div>
+
+    <div class="post-detail-modal" id="postDetailModal">
+        <div class="post-detail-modal-content">
+            <button class="close-modal" id="closePostDetailModalBtn">&times;</button>
+            <div id="post-detail-container"></div>
+        </div>
+    </div>
+
+    <div class="post-detail-modal" id="timelineMemoryModal" style="z-index: 3500;">
+        <div class="post-detail-modal-content" style="max-width: 450px; background: #02050f; overflow: hidden; padding-bottom: 20px;">
+            <button class="close-modal" id="closeTimelineModalBtn">&times;</button>
+            
+            <div id="timeline-progress-container" style="display: flex; gap: 4px; padding: 10px 14px 5px 14px;"></div>
+            
+            <div id="timeline-content-area" style="position: relative; width: 100%; aspect-ratio: 1/1; background: #000; margin-top: 10px;">
+                <img id="timeline-image" src="" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                
+                <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(transparent, rgba(4,8,20,0.95)); padding: 40px 14px 20px 14px; box-sizing: border-box;">
+                    <div style="font-size: 0.72rem; color: var(--amber); font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;" id="timeline-date"></div>
+                    <div style="font-size: 0.95rem; color: #fff; margin-top: 4px; line-height: 1.4;" id="timeline-caption"></div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 5px;" id="timeline-location"></div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 15px;">
+                <button class="action-icon-btn" id="timeline-prev-btn">⏮️</button>
+                <button class="action-icon-btn" id="timeline-play-btn">⏸️ Pausa</button>
+                <button class="action-icon-btn" id="timeline-next-btn">⏭️</button>
+            </div>
         </div>
     </div>
 
@@ -410,7 +445,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
     
         const firebaseConfig = {
             apiKey: "AIzaSyB9r1e68Vte3S4Ui8OiuBoSdR8p8uigeSc",
@@ -431,6 +466,14 @@
         let originalLoadedImage = null; 
         let allCachedPhotos = []; 
         let allCachedProfiles = {}; 
+        let currentlyOpenDetailPostId = null;
+
+        // Variabler för tidslinje-minnet (VM-resan)
+        let timelinePhotos = [];
+        let currentTimelineIndex = 0;
+        let timelineTimer = null;
+        let isTimelinePaused = false;
+        const TIMELINE_DURATION = 4000;
 
         const weeklyChallenges = [
             "Vecka 1: Fånga matchtröjan eller din absolut bästa gul o blåa outfit!",
@@ -520,7 +563,14 @@
                 } else {
                     await updateDoc(postRef, { [`reactedUsers.${emojiType}`]: arrayUnion(currentUser.uid) });
                 }
-                loadPhotoFeed();
+                
+                if (currentlyOpenDetailPostId === postId) {
+                    loadPhotoFeedNoRender().then(() => {
+                        window.openPostDetailModal(postId);
+                    });
+                } else {
+                    loadPhotoFeed();
+                }
             } catch (error) { console.error(error); }
         };
 
@@ -528,13 +578,9 @@
             const heartOverlay = document.getElementById(`heart-overlay-${postId}`);
             if (heartOverlay) {
                 heartOverlay.classList.add('animate');
-                setTimeout(() => {
-                    heartOverlay.classList.remove('animate');
-                }, 700);
+                setTimeout(() => { heartOverlay.classList.remove('animate'); }, 700);
             }
-            if (!hasReacted) {
-                window.reactToPost(postId, 'heart', false);
-            }
+            if (!hasReacted) { window.reactToPost(postId, 'heart', false); }
         };
     
         window.addComment = async function(postId) {
@@ -555,7 +601,12 @@
                     })
                 });
                 inputField.value = "";
-                loadPhotoFeed();
+                
+                if (currentlyOpenDetailPostId === postId) {
+                    loadPhotoFeedNoRender().then(() => { window.openPostDetailModal(postId); });
+                } else {
+                    loadPhotoFeed();
+                }
             } catch (error) { console.error(error); }
         };
     
@@ -563,6 +614,8 @@
             if (!confirm("Radera permanent?")) return;
             try {
                 await deleteDoc(doc(db, "photos", postId));
+                document.getElementById('postDetailModal').style.display = 'none';
+                currentlyOpenDetailPostId = null;
                 loadPhotoFeed();
             } catch (error) { console.error(error); }
         };
@@ -598,7 +651,6 @@
             document.getElementById('avatar-upload-input').click();
         };
 
-        /* NYTT: Öppna en förstorad version (lightbox) av profilbilden */
         window.enlargeProfileAvatar = function(userId, username) {
             const lightbox = document.getElementById('avatarLightbox');
             const contentBox = document.getElementById('avatarLightboxContent');
@@ -615,7 +667,6 @@
             lightbox.style.display = 'flex';
         };
 
-        // Stäng lightboxen vid klick på kryss eller utanför bilden
         document.getElementById('closeLightboxBtn').addEventListener('click', () => {
             document.getElementById('avatarLightbox').style.display = 'none';
         });
@@ -645,11 +696,29 @@
             }
         };
 
-        window.openUserProfile = function(targetUserId, targetUsername) {
+        async function fetchAllUserPhotosDirect(targetUserId) {
+            try {
+                const querySnapshot = await getDocs(query(collection(db, "photos"), orderBy("createdAt", "desc")));
+                let array = [];
+                querySnapshot.forEach(d => {
+                    if(d.data().userId === targetUserId) { array.push({ id: d.id, ...d.data() }); }
+                });
+                return array;
+            } catch (error) { 
+                console.error(error); 
+                return [];
+            }
+        }
+
+        window.openUserProfile = async function(targetUserId, targetUsername) {
             const modal = document.getElementById('profileModal');
             const headerBlock = document.getElementById('modalProfileHeader');
             const gallery = document.getElementById('profileGallery');
-            const userPhotos = allCachedPhotos.filter(p => p.userId === targetUserId);
+            
+            gallery.innerHTML = '<div style="grid-column: span 3; color:var(--text-muted); font-size:0.85rem; padding:30px; text-align:center;">Laddar bilder...</div>';
+            modal.style.display = "flex";
+
+            const userPhotos = await fetchAllUserPhotosDirect(targetUserId);
             const absoluteUsername = getUserDisplayName(targetUserId, targetUsername);
             
             let totalReactionsMade = 0;
@@ -667,7 +736,6 @@
 
             const avatarMainHtml = renderAvatarHtml(targetUserId, absoluteUsername, "width:80px; height:80px; font-size:1.6rem;");
             
-            /* UPPDATERAD: Lagt till onclick="enlargeProfileAvatar(...)" på profilbilden i profilvyn */
             const avatarWithUploadWrapper = isMe 
                 ? `<div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
                      <div class="modal-avatar-wrapper" onclick="enlargeProfileAvatar('${targetUserId}', '${absoluteUsername}')">${avatarMainHtml}</div>
@@ -695,19 +763,241 @@
                         <button class="btn-edit-bio" id="bio-edit-btn" onclick="toggleBioEdit()">Ändra beskrivning</button>
                     ` : ''}
                 </div>
+                
+                <div style="width: 100%; margin-top: 15px;">
+                    <button class="btn" style="width: 100%; justify-content: center; background: linear-gradient(135deg, rgba(251, 191, 36, 0.25) 0%, rgba(16, 185, 129, 0.1) 100%); border: 1px solid var(--amber);" onclick="window.openTimelineMemory('${targetUserId}', '${absoluteUsername}')">
+                        🎬 Generera min VM-resa 2026
+                    </button>
+                </div>
             `;
 
             let galleryHtml = "";
             userPhotos.forEach(p => {
                 galleryHtml += `
-                    <div class="gallery-item" onclick="document.getElementById('profileModal').style.display='none'; document.getElementById('${p.id}').scrollIntoView({behavior: 'smooth'});">
+                    <div class="gallery-item" onclick="document.getElementById('profileModal').style.display='none'; window.openPostDetailModal('${p.id}');">
                         <img src="${p.image}">
                     </div>
                 `;
             });
             gallery.innerHTML = galleryHtml || '<div style="grid-column: span 3; color:var(--text-muted); font-size:0.85rem; padding:30px; text-align:center;">Inga bilder uppladdade än.</div>';
-            modal.style.display = "flex";
         };
+
+        // DETALJMODAL FÖR ATT VISA ETT ENKILT INLÄGG MED KOMMENTARER LIVE
+        window.openPostDetailModal = function(postId) {
+            currentlyOpenDetailPostId = postId;
+            const detailModal = document.getElementById('postDetailModal');
+            const container = document.getElementById('post-detail-container');
+            
+            const data = allCachedPhotos.find(p => p.id === postId);
+            if (!data) { alert("Inlägget kunde inte hittas."); return; }
+
+            const uid = currentUser ? currentUser.uid : null;
+            const hearts = data.reactedUsers?.heart || [];
+            const fires = data.reactedUsers?.fire || [];
+            const footballs = data.reactedUsers?.football || [];
+            const hasHeart = uid ? hearts.includes(uid) : false;
+            const hasFire = uid ? fires.includes(uid) : false;
+            const hasFootball = uid ? footballs.includes(uid) : false;
+            const isMyPost = data.userId === uid;
+            const postUserDynamicName = getUserDisplayName(data.userId, data.username);
+            const postTimeText = formatRelativeTime(data.createdAt);
+            const locationText = data.location ? `<span class="post-location">📍 ${data.location}</span>` : "";
+
+            const isChallengeStyleClass = data.isChallengePost ? "challenge-entry" : "";
+            const challengeBadgeHtml = data.isChallengePost ? `<span class="challenge-badge">🏆 Veckans Utmaning</span>` : "";
+
+            let tagsHtml = "";
+            if (data.tags && data.tags.length > 0) {
+                const links = data.tags.map(t => {
+                    const cleanT = cleanUsername(t);
+                    return `<span class="clickable-tag" onclick="document.getElementById('postDetailModal').style.display='none'; openUserProfileByName('${cleanT}')">@${cleanT}</span>`;
+                }).join(', ');
+                tagsHtml = `<div style="padding: 0 14px; font-size: 0.82rem; color: var(--text-muted); font-weight: 500;">🏷️ ${links}</div>`;
+            }
+
+            let commentsHtml = "";
+            (data.comments || []).forEach(c => {
+                const commentUserDynamicName = getUserDisplayName(c.userId, c.username);
+                commentsHtml += `
+                    <div class="comment-item">
+                        <div class="comment-header-row">
+                            <span class="comment-user" onclick="document.getElementById('postDetailModal').style.display='none'; openUserProfile('${c.userId || ''}', '${commentUserDynamicName}')">${cleanUsername(commentUserDynamicName)}</span>
+                            <span class="comment-time">${formatRelativeTime(c.createdAt)}</span>
+                        </div>
+                        <span class="comment-text">${c.text}</span>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="post-card ${isChallengeStyleClass}" style="border:none; box-shadow:none; backdrop-filter:none; background:transparent;">
+                    <div class="post-header">
+                        <div class="post-header-left">
+                            <div class="post-user-info" onclick="document.getElementById('postDetailModal').style.display='none'; openUserProfile('${data.userId || ''}', '${postUserDynamicName}')">
+                                ${renderAvatarHtml(data.userId || '', postUserDynamicName)}
+                                <span class="post-user">${cleanUsername(postUserDynamicName)}</span>
+                            </div>
+                            <div class="post-meta-details">
+                                <span>• ${postTimeText}</span>
+                                ${locationText}
+                            </div>
+                        </div>
+                        ${challengeBadgeHtml}
+                        ${isMyPost ? `<button class="delete-btn" onclick="deletePost('${postId}')">✕</button>` : ''}
+                    </div>
+                    
+                    <div class="post-img-container" ondblclick="handleImageDoubleClick('${postId}', ${hasHeart})">
+                        <div class="like-heart-overlay" id="heart-overlay-${postId}">❤️</div>
+                        <img class="post-img" src="${data.image}">
+                    </div>
+                    
+                    ${tagsHtml}
+                    
+                    <div class="post-actions-bar">
+                        <div class="actions-left">
+                            <button class="action-icon-btn ${hasHeart ? 'active' : ''}" onclick="reactToPost('${postId}', 'heart', ${hasHeart})">❤️ <span>${hearts.length}</span></button>
+                            <button class="action-icon-btn ${hasFire ? 'active' : ''}" onclick="reactToPost('${postId}', 'fire', ${hasFire})">🔥 <span>${fires.length}</span></button>
+                            <button class="action-icon-btn ${hasFootball ? 'active' : ''}" onclick="reactToPost('${postId}', 'football', ${hasFootball})">⚽ <span>${footballs.length}</span></button>
+                        </div>
+                        <button class="btn-save-insta" onclick="saveToCameraRoll('${data.image}', 'vm2026.jpg')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="post-footer">
+                        ${data.caption ? `<div class="post-caption"><strong>${cleanUsername(postUserDynamicName)}</strong>${data.caption}</div>` : ''}
+                        <div class="comments-section">
+                            <div class="comments-list">${commentsHtml}</div>
+                            ${currentUser ? `
+                                <div class="comment-input-container">
+                                    <input type="text" class="comment-input" id="comment-input-${postId}" placeholder="Lägg till en kommentar..." onkeydown="if(event.key === 'Enter') addComment('${postId}')">
+                                    <button class="btn-comment-submit" onclick="addComment('${postId}')">Publicera</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>`;
+
+            detailModal.style.display = 'flex';
+        };
+
+        document.getElementById('closePostDetailModalBtn').addEventListener('click', () => {
+            document.getElementById('postDetailModal').style.display = 'none';
+            currentlyOpenDetailPostId = null;
+        });
+
+        // BILDSPELSFUNKTION: GENERERA MIN VM-RESA 2026 (KRONOLOGISK TIDSLINJE)
+        window.openTimelineMemory = async function(targetUserId, targetUsername) {
+            const userPhotos = await fetchAllUserPhotosDirect(targetUserId);
+            if (userPhotos.length === 0) {
+                alert("Du måste ha laddat upp minst en bild för att kunna generera din VM-resa!");
+                return;
+            }
+            
+            timelinePhotos = userPhotos.reverse(); // Visa äldsta bilden först
+            currentTimelineIndex = 0;
+            isTimelinePaused = false;
+            
+            document.getElementById('profileModal').style.display = 'none';
+            document.getElementById('timelineMemoryModal').style.display = 'flex';
+            document.getElementById('timeline-play-btn').innerText = "⏸️ Pausa";
+            
+            const progressContainer = document.getElementById('timeline-progress-container');
+            progressContainer.innerHTML = timelinePhotos.map((_, index) => `
+                <div style="flex: 1; height: 3px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden;">
+                    <div id="timeline-bar-${index}" style="width: 0%; height: 100%; background: var(--amber); transition: width 0s linear;"></div>
+                </div>
+            `).join('');
+            
+            showTimelineStep();
+        };
+
+        function showTimelineStep() {
+            if (timelineTimer) clearTimeout(timelineTimer);
+            if (currentTimelineIndex >= timelinePhotos.length) {
+                alert("Det var din VM-resa hittills! 🏆 Fler minnen skapas efter nästa match!");
+                window.closeTimelineMemory();
+                return;
+            }
+            
+            const photo = timelinePhotos[currentTimelineIndex];
+            document.getElementById('timeline-image').src = photo.image;
+            document.getElementById('timeline-caption').innerHTML = photo.caption ? `<strong>${cleanUsername(photo.username)}</strong> ${photo.caption}` : `<strong>${cleanUsername(photo.username)}</strong> delade ett ögonblick.`;
+            document.getElementById('timeline-location').innerText = photo.location ? `📍 ${photo.location}` : "";
+            
+            if (photo.createdAt) {
+                const d = new Date(photo.createdAt);
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                document.getElementById('timeline-date').innerText = d.toLocaleDateString('sv-SE', options);
+            } else {
+                document.getElementById('timeline-date').innerText = "VM 2026";
+            }
+            
+            for (let i = 0; i < timelinePhotos.length; i++) {
+                const bar = document.getElementById(`timeline-bar-${i}`);
+                if (!bar) continue;
+                if (i < currentTimelineIndex) {
+                    bar.style.transition = "none";
+                    bar.style.width = "100%";
+                } else if (i === currentTimelineIndex) {
+                    bar.style.transition = "none";
+                    bar.style.width = "0%";
+                    setTimeout(() => {
+                        if (!isTimelinePaused) {
+                            bar.style.transition = `width ${TIMELINE_DURATION}ms linear`;
+                            bar.style.width = "100%";
+                        }
+                    }, 50);
+                } else {
+                    bar.style.transition = "none";
+                    bar.style.width = "0%";
+                }
+            }
+            
+            if (!isTimelinePaused) {
+                timelineTimer = setTimeout(() => {
+                    currentTimelineIndex++;
+                    showTimelineStep();
+                }, TIMELINE_DURATION);
+            }
+        }
+
+        window.closeTimelineMemory = function() {
+            if (timelineTimer) clearTimeout(timelineTimer);
+            document.getElementById('timelineMemoryModal').style.display = 'none';
+        };
+
+        document.getElementById('closeTimelineModalBtn').addEventListener('click', window.closeTimelineMemory);
+
+        document.getElementById('timeline-play-btn').addEventListener('click', () => {
+            const bar = document.getElementById(`timeline-bar-${currentTimelineIndex}`);
+            if (isTimelinePaused) {
+                isTimelinePaused = false;
+                document.getElementById('timeline-play-btn').innerText = "⏸️ Pausa";
+                showTimelineStep();
+            } else {
+                isTimelinePaused = true;
+                document.getElementById('timeline-play-btn').innerText = "▶️ Spela";
+                if (timelineTimer) clearTimeout(timelineTimer);
+                if (bar) {
+                    const computedWidth = window.getComputedStyle(bar).width;
+                    bar.style.transition = "none";
+                    bar.style.width = computedWidth;
+                }
+            }
+        });
+
+        document.getElementById('timeline-next-btn').addEventListener('click', () => {
+            currentTimelineIndex++;
+            showTimelineStep();
+        });
+
+        document.getElementById('timeline-prev-btn').addEventListener('click', () => {
+            if (currentTimelineIndex > 0) {
+                currentTimelineIndex--;
+                showTimelineStep();
+            }
+        });
 
         let avatarImageObj = null;
         let avatarOffsetX = 50;
@@ -722,16 +1012,12 @@
                 const img = new Image();
                 img.onload = function() {
                     avatarImageObj = img;
-                    // Nollställ reglagen till mitten (50%)
                     document.getElementById('avatar-offset-x').value = 50;
                     document.getElementById('avatar-offset-y').value = 50;
                     avatarOffsetX = 50;
                     avatarOffsetY = 50;
                     
-                    // Visa kontrollerna för justering
                     document.getElementById('avatar-adjuster-controls').style.display = 'flex';
-                    
-                    // Rita en första förhandsvisning direkt i profilcirkeln
                     drawAndPreviewAvatar();
                 };
                 img.src = event.target.result;
@@ -739,38 +1025,27 @@
             reader.readAsDataURL(file);
         });
 
-        // Funktion som ritar av bilden baserat på reglagen
         function drawAndPreviewAvatar(shouldSave = false) {
             if (!avatarImageObj) return;
 
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
-            // Sätter exakt samma skarpa upplösning som bilderna i flödet (800x800)
-            canvas.width = 800; 
-            canvas.height = 800;
+            canvas.width = 800; canvas.height = 800;
             
             const min = Math.min(avatarImageObj.width, avatarImageObj.height);
-            
-            // Räkna ut max tillgängligt utrymme att röra sig på i källbilden
             const maxMoveX = avatarImageObj.width - min;
             const maxMoveY = avatarImageObj.height - min;
             
-            // Omvandla procent (0-100) från sliders till faktiska pixlar i originalbilden
             const sourceX = maxMoveX * (avatarOffsetX / 100);
             const sourceY = maxMoveY * (avatarOffsetY / 100);
             
-            // Rita ut den beskurna och förflyttade delen på vår canvas
             ctx.drawImage(avatarImageObj, sourceX, sourceY, min, min, 0, 0, 800, 800);
-            
             const avatarBase64 = canvas.toDataURL('image/jpeg', 0.80);
             
-            // Om vi bara förhandsvisar, uppdatera profilbilden temporärt på skärmen så man ser vad man gör
             const modalAvatarImg = document.querySelector('.modal-avatar-wrapper .user-avatar img, .modal-avatar img');
             if (modalAvatarImg) {
                 modalAvatarImg.src = avatarBase64;
             } else {
-                // Om användaren hade en text-avatar innan, byt tillfälligt ut den mot en img-tagg i modalen
                 const avatarBox = document.querySelector('.modal-avatar-wrapper .user-avatar, .modal-avatar');
                 if (avatarBox) {
                     avatarBox.innerHTML = `<img src="${avatarBase64}" alt="">`;
@@ -778,13 +1053,9 @@
                 }
             }
 
-            // Om användaren klickade på Spara-knappen, skicka till Firebase
-            if (shouldSave) {
-                executeAvatarSave(avatarBase64);
-            }
+            if (shouldSave) { executeAvatarSave(avatarBase64); }
         }
 
-        // Koppla sliders till att uppdatera bilden live när man drar i dem
         document.getElementById('avatar-offset-x').addEventListener('input', (e) => {
             avatarOffsetX = parseInt(e.target.value);
             drawAndPreviewAvatar(false);
@@ -794,12 +1065,8 @@
             drawAndPreviewAvatar(false);
         });
 
-        // När man klickar på spara-knappen under reglagen
-        document.getElementById('avatar-save-btn').addEventListener('click', () => {
-            drawAndPreviewAvatar(true);
-        });
+        document.getElementById('avatar-save-btn').addEventListener('click', () => { drawAndPreviewAvatar(true); });
 
-        // Slutgiltig sparande mot Firestore
         async function executeAvatarSave(avatarBase64) {
             try {
                 const profileRef = doc(db, "profiles", currentUser.uid);
@@ -810,18 +1077,15 @@
                     username: existing.username || cleanUsername(currentUser.displayName || currentUser.email)
                 }, { merge: true });
                 
-                // Dölj kontrollerna igen
                 document.getElementById('avatar-adjuster-controls').style.display = 'none';
                 avatarImageObj = null;
 
-                // Ladda om allt live
                 loadPhotoFeed().then(() => {
                     window.openUserProfile(currentUser.uid, currentUser.displayName || currentUser.email);
                 });
-            } catch (err) { 
-                console.error("Kunde inte spara profilbild:", err); 
-            }
+            } catch (err) { console.error("Kunde inte spara profilbild:", err); }
         }
+
         window.applyFilterStyle = function(filterType) {
             if (!originalLoadedImage) return;
             const buttons = document.querySelectorAll('.filter-btn');
@@ -967,13 +1231,8 @@
             tagInput.focus();
         };
 
-        tagInput.addEventListener('input', (e) => {
-            showTagsDropdown(e.target.value);
-        });
-
-        tagInput.addEventListener('focus', (e) => {
-            showTagsDropdown(e.target.value);
-        });
+        tagInput.addEventListener('input', (e) => { showTagsDropdown(e.target.value); });
+        tagInput.addEventListener('focus', (e) => { showTagsDropdown(e.target.value); });
 
         document.addEventListener('click', (e) => {
             if (!tagInput.contains(e.target) && !tagsDropdown.contains(e.target)) {
@@ -1027,6 +1286,18 @@
             } catch (error) { alert(error.message); }
         });
         
+        async function loadPhotoFeedNoRender() {
+            try {
+                const profilesSnapshot = await getDocs(collection(db, "profiles"));
+                allCachedProfiles = {};
+                profilesSnapshot.forEach(d => { allCachedProfiles[d.id] = d.data(); });
+
+                // Begränsa även i bakgrunden till 15 för optimal nätverksprestanda
+                const querySnapshot = await getDocs(query(collection(db, "photos"), orderBy("createdAt", "desc"), limit(15)));
+                allCachedPhotos = [];
+                querySnapshot.forEach(d => { allCachedPhotos.push({ id: d.id, ...d.data() }); });
+            } catch (error) { console.error(error); }
+        }
 
         async function loadPhotoFeed() {
             const feedContainer = document.getElementById('feed-container');
@@ -1035,7 +1306,8 @@
                 allCachedProfiles = {};
                 profilesSnapshot.forEach(d => { allCachedProfiles[d.id] = d.data(); });
 
-                const querySnapshot = await getDocs(query(collection(db, "photos"), orderBy("createdAt", "desc")));
+                // NYTT: limit(15) ser till att endast de 15 senaste bilderna visas i flödet!
+                const querySnapshot = await getDocs(query(collection(db, "photos"), orderBy("createdAt", "desc"), limit(15)));
                 allCachedPhotos = [];
                 querySnapshot.forEach(d => { allCachedPhotos.push({ id: d.id, ...d.data() }); });
 
@@ -1069,9 +1341,7 @@
                             const cleanT = cleanUsername(t);
                             return `<span class="clickable-tag" onclick="openUserProfileByName('${cleanT}')">@${cleanT}</span>`;
                         }).join(', ');
-                        tagsHtml = `<div style="padding: 0 14px; font-size: 0.82rem; color: var(--text-muted); font-weight: 500;">
-                                        🏷️ ${links}
-                                    </div>`;
+                        tagsHtml = `<div style="padding: 0 14px; font-size: 0.82rem; color: var(--text-muted); font-weight: 500;">🏷️ ${links}</div>`;
                     }
 
                     let commentsHtml = "";
