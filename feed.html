@@ -702,42 +702,119 @@
             modal.style.display = "flex";
         };
 
+        let avatarImageObj = null;
+        let avatarOffsetX = 50;
+        let avatarOffsetY = 50;
+
         document.getElementById('avatar-upload-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file || !currentUser) return;
+            
             const reader = new FileReader();
             reader.onload = function(event) {
                 const img = new Image();
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
+                img.onload = function() {
+                    avatarImageObj = img;
+                    // Nollställ reglagen till mitten (50%)
+                    document.getElementById('avatar-offset-x').value = 50;
+                    document.getElementById('avatar-offset-y').value = 50;
+                    avatarOffsetX = 50;
+                    avatarOffsetY = 50;
                     
-                    canvas.width = 800; 
-                    canvas.height = 800;
+                    // Visa kontrollerna för justering
+                    document.getElementById('avatar-adjuster-controls').style.display = 'flex';
                     
-                    const min = Math.min(img.width, img.height);
-                    ctx.drawImage(img, (img.width-min)/2, (img.height-min)/2, min, min, 0, 0, 800, 800);
-                    
-                    const avatarBase64 = canvas.toDataURL('image/jpeg', 0.80);
-                    try {
-                        const profileRef = doc(db, "profiles", currentUser.uid);
-                        const existing = allCachedProfiles[currentUser.uid] || {};
-                        await setDoc(profileRef, {
-                            ...existing,
-                            avatar: avatarBase64,
-                            username: existing.username || cleanUsername(currentUser.displayName || currentUser.email)
-                        }, { merge: true });
-                        
-                        loadPhotoFeed().then(() => {
-                            window.openUserProfile(currentUser.uid, currentUser.displayName || currentUser.email);
-                        });
-                    } catch (err) { console.error("Kunde inte spara profilbild:", err); }
+                    // Rita en första förhandsvisning direkt i profilcirkeln
+                    drawAndPreviewAvatar();
                 };
                 img.src = event.target.result;
             };
             reader.readAsDataURL(file);
         });
 
+        // Funktion som ritar av bilden baserat på reglagen
+        function drawAndPreviewAvatar(shouldSave = false) {
+            if (!avatarImageObj) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Sätter exakt samma skarpa upplösning som bilderna i flödet (800x800)
+            canvas.width = 800; 
+            canvas.height = 800;
+            
+            const min = Math.min(avatarImageObj.width, avatarImageObj.height);
+            
+            // Räkna ut max tillgängligt utrymme att röra sig på i källbilden
+            const maxMoveX = avatarImageObj.width - min;
+            const maxMoveY = avatarImageObj.height - min;
+            
+            // Omvandla procent (0-100) från sliders till faktiska pixlar i originalbilden
+            const sourceX = maxMoveX * (avatarOffsetX / 100);
+            const sourceY = maxMoveY * (avatarOffsetY / 100);
+            
+            // Rita ut den beskurna och förflyttade delen på vår canvas
+            ctx.drawImage(avatarImageObj, sourceX, sourceY, min, min, 0, 0, 800, 800);
+            
+            const avatarBase64 = canvas.toDataURL('image/jpeg', 0.80);
+            
+            // Om vi bara förhandsvisar, uppdatera profilbilden temporärt på skärmen så man ser vad man gör
+            const modalAvatarImg = document.querySelector('.modal-avatar-wrapper .user-avatar img, .modal-avatar img');
+            if (modalAvatarImg) {
+                modalAvatarImg.src = avatarBase64;
+            } else {
+                // Om användaren hade en text-avatar innan, byt tillfälligt ut den mot en img-tagg i modalen
+                const avatarBox = document.querySelector('.modal-avatar-wrapper .user-avatar, .modal-avatar');
+                if (avatarBox) {
+                    avatarBox.innerHTML = `<img src="${avatarBase64}" alt="">`;
+                    avatarBox.style.background = 'none';
+                }
+            }
+
+            // Om användaren klickade på Spara-knappen, skicka till Firebase
+            if (shouldSave) {
+                executeAvatarSave(avatarBase64);
+            }
+        }
+
+        // Koppla sliders till att uppdatera bilden live när man drar i dem
+        document.getElementById('avatar-offset-x').addEventListener('input', (e) => {
+            avatarOffsetX = parseInt(e.target.value);
+            drawAndPreviewAvatar(false);
+        });
+        document.getElementById('avatar-offset-y').addEventListener('input', (e) => {
+            avatarOffsetY = parseInt(e.target.value);
+            drawAndPreviewAvatar(false);
+        });
+
+        // När man klickar på spara-knappen under reglagen
+        document.getElementById('avatar-save-btn').addEventListener('click', () => {
+            drawAndPreviewAvatar(true);
+        });
+
+        // Slutgiltig sparande mot Firestore
+        async function executeAvatarSave(avatarBase64) {
+            try {
+                const profileRef = doc(db, "profiles", currentUser.uid);
+                const existing = allCachedProfiles[currentUser.uid] || {};
+                await setDoc(profileRef, {
+                    ...existing,
+                    avatar: avatarBase64,
+                    username: existing.username || cleanUsername(currentUser.displayName || currentUser.email)
+                }, { merge: true });
+                
+                // Dölj kontrollerna igen
+                document.getElementById('avatar-adjuster-controls').style.display = 'none';
+                avatarImageObj = null;
+
+                // Ladda om allt live
+                loadPhotoFeed().then(() => {
+                    window.openUserProfile(currentUser.uid, currentUser.displayName || currentUser.email);
+                });
+            } catch (err) { 
+                console.error("Kunde inte spara profilbild:", err); 
+            }
+        }
         window.applyFilterStyle = function(filterType) {
             if (!originalLoadedImage) return;
             const buttons = document.querySelectorAll('.filter-btn');
