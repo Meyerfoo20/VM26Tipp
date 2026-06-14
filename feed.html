@@ -346,6 +346,28 @@
             animation: pulse-dot 2s infinite;
             z-index: -1;
         }
+        
+        /* RÖD SIFFRA FÖR OLÄSTA MEDDELANDEN */
+        .chat-badge-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #ef4444;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 900;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 6px;
+            border: 2px solid var(--bg-main);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+            animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
 
         /* Chattfönster Modal */
         .chat-window-modal {
@@ -453,6 +475,7 @@
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes lightboxZoomIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.2); opacity: 0.6; } }
     </style>
@@ -582,8 +605,10 @@
         <div class="avatar-lightbox-content" id="avatarLightboxContent"></div>
     </div>
 
+    <!-- UPPDATERAD CHATT-IKON MED ID-MÄRKT DIV FÖR OLÄSTA MEDDELANDEN -->
     <div class="live-chat-badge" id="openChatBtn" onclick="toggleVMChat(true)">
         <div class="chat-pulse"></div>
+        <div id="chatBadgeCount" style="display: none;"></div>
         <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#040814" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
@@ -656,7 +681,7 @@
             "Vecka 1: Fånga matchtröjan eller din absolut bästa gul o blåa outfit!",
             "Vecka 2: Visa din supporterhörna eller tv-uppställning inför avspark! 📺",
             "Vecka 3: Ta en bild med en bira och en VM match i bakgrunden!",
-            "Vecka 4: Fånga stämningen tillsammans med en vän eller familjemedlem! 🙌",
+            "Vecka 4: Fånga stämningen tillsammans med en vän eller familjemonlem! 🙌",
             "Vecka 5: Ta en bild med appens 1958-filter och återskapa en historisk fotbollsbild! 🏆"
         ];
 
@@ -1289,7 +1314,6 @@
             selectedBase64Image = canvas.toDataURL('image/jpeg', 0.80);
         };
 
-        // NY/UPPDATERAD FUNKTION FÖR ATT RENDERA KARUSELLEN MED EN PLUSTECKENS-AVATAR FÖR INLOGGAD ANVÄNDARE
         function renderUsersCarousel() {
             const carouselSection = document.getElementById('users-carousel-section');
             const carouselList = document.getElementById('users-carousel-list');
@@ -1302,10 +1326,9 @@
 
             let html = "";
 
-            // 1. Lägg ALLTID in den egna användaren först om man är inloggad
             if (currentUser) {
                 const myName = getUserDisplayName(currentUser.uid, currentUser.displayName || currentUser.email);
-                uniqueUsers.delete(currentUser.uid); // Ta bort från listan så den inte dupliceras
+                uniqueUsers.delete(currentUser.uid); 
                 
                 html += `
                     <div class="user-carousel-item" onclick="window.openUploadSection()">
@@ -1316,7 +1339,6 @@
                 `;
             }
 
-            // 2. Lägg till alla andra användare efteråt
             uniqueUsers.forEach((username, uid) => {
                 const finalDisplayName = getUserDisplayName(uid, username);
                 html += `
@@ -1348,10 +1370,10 @@
     
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
-            // Dölj upload boxen som standard, låt plusset eller publicering sköta logiken
             document.getElementById('upload-section').style.display = 'none';
             document.getElementById('auth-alert').style.display = user ? 'none' : 'block';
             loadPhotoFeed();
+            initGlobalUnreadChatListener(); // Startar räknaren för olästa meddelanden
         });
     
         document.getElementById('image-file').addEventListener('change', function(e) {
@@ -1479,7 +1501,6 @@
                 document.getElementById('filter-controls').style.display = 'none';
                 document.getElementById('file-label-text').innerText = "🖼️ Välj eller ta en bild";
                 
-                // Dölj sektionen efter lyckad uppladdning
                 document.getElementById('upload-section').style.display = 'none';
                 loadPhotoFeed();
             } catch (error) { alert(error.message); }
@@ -1597,7 +1618,7 @@
                                     ${currentUser ? `
                                         <div class="comment-input-container">
                                             <input type="text" class="comment-input" id="comment-input-${postId}" placeholder="Lägg till en kommentar..." onkeydown="if(event.key === 'Enter') addComment('${postId}')">
-                                            <button class="btn-comment-submit" onclick="addComment('${postId}')">Publicera</button>
+                                            <button class="btn-comment-submit" onclick="document.getElementById('comment-input-${postId}').dispatchEvent(new KeyboardEvent('keydown', {'key': 'Enter'}));">Publicera</button>
                                         </div>
                                     ` : ''}
                                 </div>
@@ -1611,12 +1632,23 @@
         // Funktion för att öppna eller stänga chatten
         window.toggleVMChat = function(show) {
             const modal = document.getElementById('vmChatModal');
+            const badge = document.getElementById('chatBadgeCount');
             if (show) {
                 modal.style.display = 'flex';
-                initLiveChatListener(); // Startar lyssnaren när chatten öppnas
+                
+                // Spara tidsstämpel i localStorage när användaren öppnar chatten
+                localStorage.setItem('lastViewedChat', new Date().toISOString());
+                if (badge) {
+                    badge.style.display = 'none';
+                    badge.innerText = '0';
+                }
+
+                initLiveChatListener(); 
             } else {
                 modal.style.display = 'none';
-                if (window.chatUnsubscribe) window.chatUnsubscribe(); // Stänger lyssnaren för att spara prestanda
+                // Uppdatera tidsstämpel även när man stänger chatten så att nästkommande meddelanden räknas rätt
+                localStorage.setItem('lastViewedChat', new Date().toISOString());
+                if (window.chatUnsubscribe) window.chatUnsubscribe(); 
             }
         }
 
@@ -1632,30 +1664,65 @@
             }
 
             try {
-                // Använder addDoc och collection() enligt v9-standarden
                 await addDoc(collection(db, 'livechat'), {
                     uid: currentUser.uid,
                     username: currentUser.displayName || 'Anonym Supporter',
                     text: text,
-                    timestamp: new Date().toISOString() // Ersätter serverTimestamp med ISO-sträng för enkelhet
+                    timestamp: new Date().toISOString() 
                 });
                 input.value = '';
+                // Sätt tidpunkt direkt vid egna skickade meddelanden för att inte markera dem som olästa för dig själv
+                localStorage.setItem('lastViewedChat', new Date().toISOString());
             } catch (error) {
                 console.error("Fel vid sändning av chattmeddelande: ", error);
             }
         }
 
+        // REALTIDSLYSSNARE FÖR ATT RÄKNA OLÄSTA MEDDELANDEN I BAKGRUNDEN
+        function initGlobalUnreadChatListener() {
+            const badge = document.getElementById('chatBadgeCount');
+            const chatQuery = query(collection(db, 'livechat'), orderBy('timestamp', 'asc'));
+
+            onSnapshot(chatQuery, snapshot => {
+                const modal = document.getElementById('vmChatModal');
+                // Om chattfönstret redan är öppet vill vi inte visa någon siffra som oläst
+                if (modal.style.display === 'flex') {
+                    localStorage.setItem('lastViewedChat', new Date().toISOString());
+                    return;
+                }
+
+                const lastViewed = localStorage.getItem('lastViewedChat') || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                
+                let unreadCount = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (!data.timestamp || data.timestamp < twentyFourHoursAgo) return;
+                    
+                    // Räkna meddelanden som är nyare än när du sist kollade samt inte är skrivna av dig själv
+                    if (data.timestamp > lastViewed && data.uid !== (currentUser ? currentUser.uid : null)) {
+                        unreadCount++;
+                    }
+                });
+
+                if (unreadCount > 0 && badge) {
+                    badge.innerText = unreadCount;
+                    badge.className = 'chat-badge-count';
+                    badge.style.display = 'flex';
+                } else if (badge) {
+                    badge.style.display = 'none';
+                }
+            });
+        }
+
         // Initiera Realtids-lyssnare för chatten med 24-timmars filtrering
         function initLiveChatListener() {
             const container = document.getElementById('chatMessagesContainer');
-            
-            // Tidsgräns: 24 timmar bakåt i tiden
             const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-            // Rensar gamla lyssnare om de finns
             if (window.chatUnsubscribe) window.chatUnsubscribe();
 
-            // Skapar en modulär query med collection(), query(), where() och orderBy()
             const chatQuery = query(
                 collection(db, 'livechat'),
                 orderBy('timestamp', 'asc')
@@ -1672,13 +1739,11 @@
 
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    // Filtrera i efterhand om timestamp är en sträng
                     if (data.timestamp && data.timestamp < twentyFourHoursAgo) return;
 
                     const isMe = data.uid === (currentUser ? currentUser.uid : null);
                     const msgClass = isMe ? 'me' : 'other';
                     
-                    // Formatera tid (t.ex. 14:32)
                     const dateObj = new Date(data.timestamp);
                     const timeStr = dateObj.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
 
@@ -1692,12 +1757,12 @@
                 });
 
                 container.innerHTML = html;
-                container.scrollTop = container.scrollHeight; // Autoscrolla till botten
+                container.scrollTop = container.scrollHeight; 
             }, error => {
                 console.error("Chatt-fel: ", error);
             });
         }
-        // Säkerhetsfunktion för att undvika kodinjektion (XSS) i chatten
+        
         function escapeHtml(text) {
             return text
                 .replace(/&/g, "&amp;")
