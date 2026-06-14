@@ -1159,37 +1159,74 @@
         const thrdSec = document.getElementById('modal-sec-thrd');
         const plyfSec = document.getElementById('modal-sec-plyf');
 
+        // --- 1. GRUPPSPEL MED RÄTTNING ---
         let grpHtml = `<div style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-right:5px;">`;
         groupLetters.forEach(letter => {
             const fixtures = generateGroupMatchFixtures(initialGroups[letter]);
             fixtures.forEach((match, index) => {
                 const matchKey = `${letter}_M${index}`;
                 const prediction = userObj.fullData.groupMatches?.[matchKey] || "Ej tippad";
+                const officialResult = REAL_RESULTS.groupMatches?.[matchKey];
+                
+                // Bestäm färg och status baserat på om matchen är avgjord/rättad
+                let statusStyle = "background: rgba(255,255,255,0.03);";
+                let badgeIcon = "";
+                
+                if (officialResult) {
+                    if (prediction === officialResult) {
+                        statusStyle = "background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);";
+                        badgeIcon = " ✅";
+                    } else {
+                        statusStyle = "background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3);";
+                        badgeIcon = ` ❌ (Rätt: ${officialResult})`;
+                    }
+                }
+
                 grpHtml += `
-                    <div style="display:flex; justify-content:space-between; background:rgba(255,255,255,0.03); padding:10px; border-radius:10px; font-size:0.9rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:10px; font-size:0.9rem; ${statusStyle}">
                         <span style="color:var(--text-muted); font-weight:700; width:65px;">Grupp ${letter}:</span>
                         <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:5px;">${match.home} - ${match.away}</span>
-                        <span style="color:var(--amber); font-weight:900; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:4px;">${prediction}</span>
+                        <span style="color:var(--amber); font-weight:900; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:4px;">${prediction}${badgeIcon}</span>
                     </div>`;
             });
         });
         grpHtml += `</div>`;
         grpSec.innerHTML = grpHtml;
 
+        // --- 2. BÄSTA TREOR MED RÄTTNING ---
         let thrdHtml = `<div style="display:flex; flex-direction:column; gap:8px;">`;
         const chosenThirds = userObj.fullData.bestThirds || [];
-        if (chosenThirds.length === 0) { thrdHtml += `<p style="color:var(--text-muted); text-align:center;">Inga valda bästa treor ännu.</p>`; } 
-        else {
+        if (chosenThirds.length === 0) { 
+            thrdHtml += `<p style="color:var(--text-muted); text-align:center;">Inga valda bästa treor ännu.</p>`; 
+        } else {
             chosenThirds.forEach(team => {
+                const isCorrect = REAL_RESULTS.bestThirds?.includes(team);
+                const hasOfficialThirds = REAL_RESULTS.bestThirds && REAL_RESULTS.bestThirds.length > 0;
+                
+                let thrdStyle = "background: rgba(255,255,255,0.03);";
+                let thrdIcon = "";
+                
+                if (hasOfficialThirds) {
+                    if (isCorrect) {
+                        thrdStyle = "background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);";
+                        thrdIcon = "<span style='margin-left:auto; color:#10b981; font-weight:bold;'>RÄTT ✅</span>";
+                    } else {
+                        thrdStyle = "background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3);";
+                        thrdIcon = "<span style='margin-left:auto; color:#ef4444; font-weight:bold;'>FEL ❌</span>";
+                    }
+                }
+
                 thrdHtml += `
-                    <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.03); padding:12px; border-radius:12px;">
+                    <div style="display:flex; align-items:center; gap:10px; padding:12px; border-radius:12px; ${thrdStyle}">
                         ${getFlagHtml(team)} <span class="team-name">${team}</span>
+                        ${thrdIcon}
                     </div>`;
             });
         }
         thrdHtml += `</div>`;
         thrdSec.innerHTML = thrdHtml;
 
+        // --- 3. SLUTSPEL MED RÄTTNING ---
         const userRankings = calculateRankingsForUser(userObj.fullData);
         const W = {}, R = {};
         groupLetters.forEach(l => { W[l] = userRankings[l]?.[0] || '?'; R[l] = userRankings[l]?.[1] || '?'; });
@@ -1229,15 +1266,41 @@
         });
 
         let plyfHtml = `<div style="display:flex; flex-direction:column; gap:10px; max-height:50vh; overflow-y:auto; padding-right:5px;">`;
-        if (Object.keys(savedMatches).length === 0) { plyfHtml += `<p style="color:var(--text-muted); text-align:center;">Inget slutspel tippat ännu.</p>`; } 
-        else {
+        if (Object.keys(savedMatches).length === 0) { 
+            plyfHtml += `<p style="color:var(--text-muted); text-align:center;">Inget slutspel tippat ännu.</p>`; 
+        } else {
             userPlayoffTree.forEach(m => {
                 const matchPred = savedMatches[`m${m.id}`] || { t1Score: 0, t2Score: 0, winner: '' };
+                const realMatch = REAL_RESULTS.matches?.[`m${m.id}`];
+                
+                let cardStyle = "background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05);";
+                let pointsBadge = "";
+
+                if (realMatch) {
+                    const exactCorrect = (realMatch.t1Score === parseInt(matchPred.t1Score) && realMatch.t2Score === parseInt(matchPred.t2Score));
+                    const winnerCorrect = (matchPred.winner === realMatch.winner);
+                    
+                    if (exactCorrect) {
+                        cardStyle = "background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981;";
+                        pointsBadge = "<span style='color:#10b981; font-weight:900;'>+5p (Exakt)</span>";
+                    } else if (winnerCorrect) {
+                        cardStyle = "background: rgba(251, 191, 36, 0.1); border: 2px solid #fbbf24;";
+                        pointsBadge = "<span style='color:#fbbf24; font-weight:900;'>+3p (Vinnare)</span>";
+                    } else {
+                        cardStyle = "background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444;";
+                        pointsBadge = `<span style='color:#ef4444; font-weight:900;'>0p (Rätt: ${realMatch.winner} ${realMatch.t1Score}-${realMatch.t2Score})</span>`;
+                    }
+                }
+
                 const isWinnerT1 = matchPred.winner === m.t1 && m.t1 !== '?' ? '🏆' : '';
                 const isWinnerT2 = matchPred.winner === m.t2 && m.t2 !== '?' ? '🏆' : '';
+                
                 plyfHtml += `
-                    <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); border-radius:14px; padding:12px;">
-                        <div style="font-size:0.75rem; color:var(--amber); text-transform:uppercase; font-weight:700; margin-bottom:6px;">${m.round}</div>
+                    <div style="border-radius:14px; padding:12px; ${cardStyle}">
+                        <div style="display:flex; justify-content:between; align-items:center; font-size:0.75rem; text-transform:uppercase; font-weight:700; margin-bottom:6px;">
+                            <span style="color:var(--amber); flex:1;">${m.round}</span>
+                            ${pointsBadge}
+                        </div>
                         <div style="display:flex; justify-content:space-between; font-size:0.95rem; margin-bottom:4px;">
                             <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${isWinnerT1} ${getFlagHtml(m.t1)} ${m.t1}</span>
                             <span style="font-weight:900; color:var(--amber);">${matchPred.t1Score}</span>
@@ -1255,6 +1318,7 @@
         switchModalTab('grp');
         document.getElementById('user-details-modal').classList.add('open');
     }
+
 
     window.closeUserModal = function() { document.getElementById('user-details-modal').classList.remove('open'); }
     window.switchModalTab = function(tabName) {
