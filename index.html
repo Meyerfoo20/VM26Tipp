@@ -161,11 +161,11 @@
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
-        .steps::-webkit-scrollbar { display: none; } /* Göm scrollbar för en renare app-känsla */
+        .steps::-webkit-scrollbar { display: none; }
         
         .step { 
             flex: 1;
-            min-width: 110px; /* Säkrar att texten inte trycks ihop på mobilen */
+            min-width: 110px; 
             text-align: center;
             background: transparent; 
             padding: 14px 10px; 
@@ -380,7 +380,7 @@
             background: rgba(30, 41, 59, 0.8);
             border: 1px solid rgba(255,255,255,0.1);
             color: var(--text-muted);
-            width: 42px; /* Ökad från 38px för bättre touch-target på mobil */
+            width: 42px; 
             height: 42px;
             border-radius: 8px;
             font-weight: 900;
@@ -573,7 +573,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
-            min-width: 500px; /* Säkrar läsbarhet på mindre skärmar genom scroll */
+            min-width: 450px; 
         }
         .leaderboard-table th {
             text-align: left;
@@ -599,7 +599,17 @@
             color: #fff;
         }
 
-        /* --- POPUP / MODAL NYTT SYSTEM --- */
+        .leaderboard-table tr.current-user-row {
+            background: rgba(251, 191, 36, 0.12) !important;
+            border: 2px solid var(--amber) !important;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.2);
+        }
+        .leaderboard-table tr.current-user-row td {
+            color: #fff !important;
+            font-weight: 700;
+        }
+
+        /* --- POPUP / MODAL --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -675,12 +685,11 @@
         .modal-content-section { display: none; }
         .modal-content-section.active { display: block; }
 
-        /* --- SÄKERSTÄLL ATT INNEHÅLLET INTE GÖMS I BOTTEN --- */
         body {
             padding-bottom: 120px !important;
         }
 
-        /* --- BOTTOM NAVBAR PREMIUM STYLE --- */
+        /* --- BOTTOM NAVBAR --- */
         .bottom-nav {
             position: fixed;
             bottom: 16px;
@@ -746,37 +755,17 @@
             filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3));
         }
 
-        /* --- MOBILE RESPONSIVE ADAPTATIONS --- */
         @media (max-width: 600px) {
             body {
                 padding: 15px 10px 120px 10px !important;
             }
-            header h1 {
-                font-size: 2.2rem;
-            }
-            header p {
-                font-size: 0.95rem;
-            }
-            .nav-title {
-                font-size: 1.3rem;
-            }
-            .nav-arrow-btn {
-                padding: 10px 12px;
-                font-size: 0.8rem;
-            }
-            .auth-container, .thirds-container, .group-card, .match-card {
-                padding: 16px;
-                border-radius: 18px;
-            }
-            /* Admin Panel Layout justering för mobiler */
-            .admin-row-grid {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 8px !important;
-            }
-            .admin-row-grid input {
-                width: 100% !important;
-            }
+            header h1 { font-size: 2.2rem; }
+            header p { font-size: 0.95rem; }
+            .nav-title { font-size: 1.3rem; }
+            .nav-arrow-btn { padding: 10px 12px; font-size: 0.8rem; }
+            .auth-container, .thirds-container, .group-card, .match-card { padding: 16px; border-radius: 18px; }
+            .admin-row-grid { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+            .admin-row-grid input { width: 100% !important; }
         }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -788,7 +777,6 @@
 <body>
 
 <div class="container">
-    <!-- Resten av din oförändrade HTML och scriptstruktur bibehålls exakt här under -->
     <div id="auth-screen" class="auth-container">
         <h2 id="auth-title" style="margin-bottom: 20px; color: var(--amber); font-weight: 950; text-transform: uppercase; font-size: 1.4rem;">Skapa konto för att tippa</h2>
         <input type="text" id="auth-username" placeholder="Ditt namn / Användarnamn">
@@ -810,7 +798,7 @@
         <header>
             <h1>FIFA VM 2026 BRACKET</h1>
             <p>Tippa hela mästerskapet match för match</p>
-            <p>100kr swishas till vinnaren, när allt är avjgort!</p>
+            <p>100kr swishas till vinnaren, när allt är avgjort!</p>
         </header>
 
         <div class="steps">
@@ -845,7 +833,7 @@
         <section id="step-3" class="view-section">
             <div class="match-navigation">
                 <button class="nav-arrow-btn" id="prev-match-btn" onclick="changeMatch(-1)">← Föregående</button>
-                <div id="current-match-indicator" class="nav-title" style="font-size: 1.2rem;">Match 1/31 (Du måste också välja resultat, exempelvis 2-1)</div>
+                <div id="current-match-indicator" class="nav-title" style="font-size: 1.2rem;">Match 1/31</div>
                 <button class="nav-arrow-btn" id="next-match-btn" onclick="changeMatch(1)">Nästa →</button>
             </div>
 
@@ -883,7 +871,6 @@
     </div>
 </div>
 
-<!-- Övriga modaler och script är exakt desamma som i din originalkod -->
 <div class="modal-overlay" id="user-details-modal">
     <div class="modal-box">
         <div class="modal-header">
@@ -912,7 +899,6 @@
     </div>
 </div>
 
-<!-- Script-sektionen har bevarats helt intakt för att bibehålla din Firebase-logik -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -1113,21 +1099,31 @@
         });
 
         scores.sort((a, b) => b.total - a.total);
+        
+        const currentUserId = auth.currentUser ? auth.currentUser.uid : null;
+
         scores.forEach((row, index) => {
             let rowBg = "";
-            if (index === 0) rowBg = "background: rgba(251, 191, 36, 0.05);"; // Guld-skimmer för ledaren
-            else if (index === scores.length - 1) rowBg = "background: rgba(239, 68, 68, 0.02);"; // Lite rödtonat för jumbon
+            let extraClass = "";
+            
+            if (row.id === currentUserId) {
+                extraClass = "current-user-row";
+            } else if (index === 0) {
+                rowBg = "background: rgba(251, 191, 36, 0.05);"; 
+            } else if (index === scores.length - 1) {
+                rowBg = "background: rgba(239, 68, 68, 0.02);"; 
+            }
 
             leaderboardBody.innerHTML += `
-                <tr class="clickable-row" style="${rowBg}" onclick="showUserDetails('${row.id}')">
+                <tr class="clickable-row ${extraClass}" style="${rowBg}" onclick="showUserDetails('${row.id}')">
                     <td>
                         <div class="pos-badge" style="${
                             index === 0 ? 'background:rgba(251,191,36,0.15); border-color:var(--amber); color:var(--amber);' : 
-                            index === 1 ? 'background:rgba(226,232,240,0.15); border-color:#cbd5e1; color:#cbd5e1;' : // Silver
-                            index === 2 ? 'background:rgba(180,83,9,0.15); border-color:#b45309; color:#b45309;' : '' // Brons
+                            index === 1 ? 'background:rgba(226,232,240,0.15); border-color:#cbd5e1; color:#cbd5e1;' : 
+                            index === 2 ? 'background:rgba(180,83,9,0.15); border-color:#b45309; color:#b45309;' : '' 
                         }">${index + 1}</div>
                     </td>
-                    <td><strong>${row.name}</strong></td>
+                    <td><strong>${row.name} ${row.id === currentUserId ? ' (Du)' : ''}</strong></td>
                     <td class="td-center">${row.grpP} p</td>
                     <td class="td-center">${row.thrdP} p</td>
                     <td class="td-center">${row.plyfP} p</td>
@@ -1169,7 +1165,6 @@
         const thrdSec = document.getElementById('modal-sec-thrd');
         const plyfSec = document.getElementById('modal-sec-plyf');
 
-        // --- 1. GRUPPSPEL MED RÄTTNING ---
         let grpHtml = `<div style="display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow-y:auto; padding-right:5px;">`;
         groupLetters.forEach(letter => {
             const fixtures = generateGroupMatchFixtures(initialGroups[letter]);
@@ -1178,7 +1173,6 @@
                 const prediction = userObj.fullData.groupMatches?.[matchKey] || "Ej tippad";
                 const officialResult = REAL_RESULTS.groupMatches?.[matchKey];
                 
-                // Bestäm färg och status baserat på om matchen är avgjord/rättad
                 let statusStyle = "background: rgba(255,255,255,0.03);";
                 let badgeIcon = "";
                 
@@ -1196,14 +1190,13 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:10px; font-size:0.9rem; ${statusStyle}">
                         <span style="color:var(--text-muted); font-weight:700; width:65px;">Grupp ${letter}:</span>
                         <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:5px;">${match.home} - ${match.away}</span>
-                        <span style="color:var(--amber); font-weight:900; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:4px;">${prediction}${badgeIcon}</span>
+                        <span style="color:var(--amber); font-weight:900; background:rgba(0,0,0,0.3); padding:2px 8px; border-radius:4px;">${prediction || '—'}${badgeIcon}</span>
                     </div>`;
             });
         });
         grpHtml += `</div>`;
         grpSec.innerHTML = grpHtml;
 
-        // --- 2. BÄSTA TREOR MED RÄTTNING ---
         let thrdHtml = `<div style="display:flex; flex-direction:column; gap:8px;">`;
         const chosenThirds = userObj.fullData.bestThirds || [];
         if (chosenThirds.length === 0) { 
@@ -1236,7 +1229,6 @@
         thrdHtml += `</div>`;
         thrdSec.innerHTML = thrdHtml;
 
-        // --- 3. SLUTSPEL MED RÄTTNING ---
         const userRankings = calculateRankingsForUser(userObj.fullData);
         const W = {}, R = {};
         groupLetters.forEach(l => { W[l] = userRankings[l]?.[0] || '?'; R[l] = userRankings[l]?.[1] || '?'; });
@@ -1328,7 +1320,6 @@
         switchModalTab('grp');
         document.getElementById('user-details-modal').classList.add('open');
     }
-
 
     window.closeUserModal = function() { document.getElementById('user-details-modal').classList.remove('open'); }
     window.switchModalTab = function(tabName) {
@@ -1445,8 +1436,14 @@
 
     window.predictGroupMatch = async function(matchKey, sign) {
         if (userPredictions.isLocked) return alert("Din tippning är låst och kan inte ändras!");
-        if (userPredictions.groupMatches[matchKey] === sign) { userPredictions.groupMatches[matchKey] = ""; } 
-        else { userPredictions.groupMatches[matchKey] = sign; }
+        
+        // HÄR ÄR LÖSNINGEN: Om du klickar på det redan valda tecknet, sätt tillbaka det till ett streck ""
+        if (userPredictions.groupMatches[matchKey] === sign) { 
+            userPredictions.groupMatches[matchKey] = ""; 
+        } else { 
+            userPredictions.groupMatches[matchKey] = sign; 
+        }
+        
         calculateGroupTables();
         renderActiveGroup();
         await saveUserPredictions();
@@ -1605,7 +1602,6 @@
         await saveScore(matchId); 
         const match = playoffMatches.find(m => m.id === matchId);
         
-        // Hantera vinnaren till nästa match
         if (match.nextMatchId !== null) {
             const nextMatch = playoffMatches.find(m => m.id === match.nextMatchId);
             const oldTeamName = match.slot === 1 ? nextMatch.t1 : nextMatch.t2;
@@ -1613,7 +1609,6 @@
             if (match.slot === 1) nextMatch.t1 = teamName; else nextMatch.t2 = teamName;
         }
 
-        // NYTT: Hantera förloraren till bronsmatchen (om det är en semifinal)
         if (match.bronzeMatchId !== null && match.bronzeMatchId !== undefined) {
             const bronzeMatch = playoffMatches.find(m => m.id === match.bronzeMatchId);
             const loserName = (teamName === match.t1) ? match.t2 : match.t1;
@@ -1678,14 +1673,14 @@
 
     window.submitFinalBracket = async function() {
         if (userPredictions.isLocked) return;
-        const confirmSubmit = confirm("Är du säker på att du vill skicka in? Detta kommer att låsa din tippning och du kan inte ändra dina svar i efterhand.");
+        const confirmSubmit = confirm("Är du säker på att du vill skicka in? Detta kommer att låsa din tippning.");
         if (!confirmSubmit) return;
         try {
             userPredictions.isLocked = true;
             await saveUserPredictions();
-            alert("Din tippning har skickats in och sparats! Du skickas nu till tabellvyn.");
+            alert("Din tippning har skickats in och sparats!");
             switchStep(4);
-        } catch (error) { userPredictions.isLocked = false; alert("Ett fel uppstod när tippningen skulle låsas: " + error.message); }
+        } catch (error) { userPredictions.isLocked = false; alert("Ett fel uppstod: " + error.message); }
     }
 
     window.switchStep = function(stepNum) {
@@ -1747,7 +1742,10 @@
         document.getElementById("admin-modal").classList.add("open");
     }
 
-    window.closeAdminPanel = function() { document.getElementById("admin-modal").classList.remove("open"); }
+    // HÄR ÄR LÖSNINGEN PÅ ADMIN: Ändrade från .remove("remove") till .remove("open")
+    window.closeAdminPanel = function() { 
+        document.getElementById("admin-modal").classList.remove("open"); 
+    }
 
     window.saveAdminResults = async function() {
         const groupMatches = {};
@@ -1774,7 +1772,6 @@
     }
 </script>
 
-<!-- 📱 DESIGNAD BOTTOM NAVBAR -->
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
