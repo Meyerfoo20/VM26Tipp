@@ -1087,9 +1087,18 @@
                     const realMatch = REAL_RESULTS.matches[k];
                     const userMatch = data.matches[k];
                     if (realMatch && userMatch) {
+                        const winnerCorrect = (userMatch.winner === realMatch.winner);
                         const exactScoreCorrect = (realMatch.t1Score === parseInt(userMatch.t1Score) && realMatch.t2Score === parseInt(userMatch.t2Score));
-                        if (exactScoreCorrect) { plyfP += 5; } 
-                        else if (userMatch.winner === realMatch.winner) { plyfP += 3; }
+                        
+                        if (winnerCorrect && exactScoreCorrect) { 
+                            plyfP += 5; 
+                        } 
+                        else if (winnerCorrect && !exactScoreCorrect) { 
+                            plyfP += 3; 
+                        }
+                        else if (!winnerCorrect && exactScoreCorrect) {
+                            plyfP += 2; 
+                        }
                     }
                 });
             }
@@ -1282,12 +1291,15 @@
                     const exactCorrect = (realMatch.t1Score === parseInt(matchPred.t1Score) && realMatch.t2Score === parseInt(matchPred.t2Score));
                     const winnerCorrect = (matchPred.winner === realMatch.winner);
                     
-                    if (exactCorrect) {
+                    if (winnerCorrect && exactCorrect) {
                         cardStyle = "background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981;";
                         pointsBadge = "<span style='color:#10b981; font-weight:900;'>+5p (Exakt)</span>";
-                    } else if (winnerCorrect) {
+                    } else if (winnerCorrect && !exactCorrect) {
                         cardStyle = "background: rgba(251, 191, 36, 0.1); border: 2px solid #fbbf24;";
                         pointsBadge = "<span style='color:#fbbf24; font-weight:900;'>+3p (Vinnare)</span>";
+                    } else if (!winnerCorrect && exactCorrect) {
+                        cardStyle = "background: rgba(251, 191, 36, 0.1); border: 2px solid #fbbf24;";
+                        pointsBadge = "<span style='color:#fbbf24; font-weight:900;'>+2p (Resultat)</span>";
                     } else {
                         cardStyle = "background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444;";
                         pointsBadge = `<span style='color:#ef4444; font-weight:900;'>0p (Rätt: ${realMatch.winner} ${realMatch.t1Score}-${realMatch.t2Score})</span>`;
@@ -1437,7 +1449,6 @@
     window.predictGroupMatch = async function(matchKey, sign) {
         if (userPredictions.isLocked) return alert("Din tippning är låst och kan inte ändras!");
         
-        // HÄR ÄR LÖSNINGEN: Om du klickar på det redan valda tecknet, sätt tillbaka det till ett streck ""
         if (userPredictions.groupMatches[matchKey] === sign) { 
             userPredictions.groupMatches[matchKey] = ""; 
         } else { 
@@ -1742,7 +1753,6 @@
         document.getElementById("admin-modal").classList.add("open");
     }
 
-    // HÄR ÄR LÖSNINGEN PÅ ADMIN: Ändrade från .remove("remove") till .remove("open")
     window.closeAdminPanel = function() { 
         document.getElementById("admin-modal").classList.remove("open"); 
     }
@@ -1760,9 +1770,9 @@
         const bestThirds = document.getElementById("admin-thirds").value.split(",").map(x => x.trim()).filter(Boolean);
         const matches = {};
         for(let i = 0; i < 31; i++) {
-            const winner = document.getElementById(`admin-winner-${i}`).value.trim();
-            const t1 = document.getElementById(`admin-t1-${i}`).value;
-            const t2 = document.getElementById(`admin-t2-${i}`).value;
+            const winner = document.getElementById("admin-winner-" + i).value.trim();
+            const t1 = document.getElementById("admin-t1-" + i).value;
+            const t2 = document.getElementById("admin-t2-" + i).value;
             if(winner && t1 !== "" && t2 !== "") { matches[`m${i}`] = { winner, t1Score: Number(t1), t2Score: Number(t2) }; }
         }
 
